@@ -109,6 +109,7 @@
     <div class="tab" data-p="z2022">ZI 21/22</div>
     <div class="tab" data-p="z2021">ZI 2021</div>
     <div class="tab" data-p="z2020">ZI 20/21 + Dodatni</div>
+    <div class="tab" data-p="dop">➕ Dopuna</div>
   </nav>
 
   <div class="controls">
@@ -472,6 +473,320 @@
       <div class="expl"><b>Neovisni slave uređaji:</b> SCLK, MOSI, MISO su zajednički, ali svaki slave ima
       <b>vlastiti SS</b> signal. Master pazi da je u svakom trenutku aktivan <i>samo jedan</i> SS kako ne bi
       došlo do kolizije na MISO liniji.</div>
+    </div>
+  </div>
+
+  <!-- LUT -->
+  <div class="task">
+    <div class="q"><span class="badge">T16</span><span class="qt">LUT — generator funkcijske logike u FPGA</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="expl">
+        <b>LUT (Look-Up Table)</b> je osnovni element za definiranje logičkih funkcija u FPGA sklopovima
+        (nalazi se unutar CLB-a). Ima tipično <b>4–6 ulaza</b> i radi kao mala memorija koja <b>mapira sve
+        moguće kombinacije ulaza na željeni izlaz</b> (kao istinitosna tablica). Programiranjem sadržaja LUT-a
+        određujemo koju logičku funkciju sklop izvodi — zato je FPGA "rekonfigurabilan".
+      </div>
+    </div>
+  </div>
+
+  <!-- SysTick detaljno -->
+  <div class="task">
+    <div class="q"><span class="badge">T17</span><span class="qt">Sistemsko brojilo (SysTick) — blok shema, registri, adrese</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram">                       ┌─────┐  -1
+            RELOAD ───▶│  +  │◀────┐
+               │       └──┬──┘     │
+               ▼          ▼        │
+ AHB clk ─/8─▶ MUX ──▶ CURRENT ───┴──▶ (= 0?) ──▶ SysTick interrupt
+               ▲         │CE
+          CLKSOURCE   ENABLE              TICKINT</div>
+      <div class="expl">
+        SysTick je <b>24-bitno brojilo koje broji prema dolje</b>. Odbroji od vrijednosti u <code>STK_LOAD</code>
+        do nule, generira prekid i <b>automatski se ponovo učita</b> na RELOAD vrijednost.
+        <ul class="clean">
+          <li><b>AHB clock /8</b> — izvor takta (dijelilo kontrolira bit CLKSOURCE).</li>
+          <li><b>CURRENT</b> (<code>STK_VAL</code>) — trenutna vrijednost.</li>
+          <li><b>RELOAD</b> (<code>STK_LOAD</code>) — vrijednost ponovnog učitavanja.</li>
+          <li><b>ENABLE</b> — omogućuje brojilo; <b>TICKINT</b> — omogućuje prekid kad dosegne 0.</li>
+        </ul>
+      </div>
+      <h4 class="sh">Adresiranje registara (offset od bazne adrese)</h4>
+      <table class="t">
+        <tr><th>Registar</th><th>Offset</th><th>Uloga</th></tr>
+        <tr><td>STK_CTRL</td><td>0x00</td><td>kontrola: ENABLE, TICKINT, CLKSOURCE</td></tr>
+        <tr><td>STK_LOAD</td><td>0x04</td><td>vrijednost ponovnog učitavanja</td></tr>
+        <tr><td>STK_VAL</td><td>0x08</td><td>trenutna vrijednost</td></tr>
+        <tr><td>STK_CALIB</td><td>0x0C</td><td>kalibracija</td></tr>
+      </table>
+      <div class="note">Susjedni registri su razmaknuti za 4 bajta (32-bitne riječi) — tipičan primjer
+      adresiranja registara periferija.</div>
+    </div>
+  </div>
+
+  <!-- Memorijska mapa -->
+  <div class="task">
+    <div class="q"><span class="badge">T18</span><span class="qt">Memorijska mapa kodnog prostora STM32F407</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram"> BOOT1=x, BOOT0=0          BOOT1=0, BOOT0=1
+ 0x1FFF FFFF ┌──────────┐   ┌──────────┐
+             │Option by.│   │Option by.│
+ 0x1FFF 0000 │System mem│   │System mem│  ← boot loader
+ 0x1000 FFFF ├──────────┤   ├──────────┤
+             │ CCM RAM  │   │ CCM RAM  │
+ 0x0810 0000 ├──────────┤   ├──────────┤
+             │  Flash   │   │  Flash   │
+ 0x0800 0000 ├──────────┤   ├──────────┤
+ 0x0010 0000 │  Flash   │   │          │  ← mapirano na 0x0
+ 0x0000 0000 │ (alias)  │   │System mem│
+             └──────────┘   └──────────┘</div>
+      <div class="expl">
+        <ul class="clean">
+          <li><b>System memory</b> — sadrži ugrađeni <b>boot loader</b>; ako je odabrana kao boot memorija
+          (BOOT1=0, BOOT0=1), nakon reseta učitava korisnikov program preko UART/USB i upisuje ga u Flash.</li>
+          <li><b>Flash memory</b> — korisnikov program; izvršava se nakon idućeg reseta. Aliasiran je i na
+          adresu 0x0 (odakle procesor dohvaća početni SP i reset vektor).</li>
+          <li><b>CCM RAM</b> (Core-Coupled Memory) — RAM za podatke koji traže <b>brz pristup i malo kašnjenje</b>;
+          vezan izravno na jezgru.</li>
+        </ul>
+        Adresa s koje se boota (0x0) mapira se na Flash ili System memory ovisno o BOOT0/BOOT1 pinovima.
+      </div>
+    </div>
+  </div>
+
+  <!-- Cortex-M4 -->
+  <div class="task">
+    <div class="q"><span class="badge">T19</span><span class="qt">Cortex-M4 — blok shema, registri, statusni registri, iznimke</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram"> ┌─────────────────────────────────────┐
+ │ Cortex-M4   ┌─────┐      ┌─────────┐ │
+ │   ┌────┐    │ FPU │      │ Embedded│ │
+ │   │NVIC│◀──▶├─────┤      │  Trace  │ │
+ │   └────┘    │Proc.│◀────▶│ Macrocell││
+ │   ┌────┐    │core │      └─────────┘ │
+ │   │Debug│◀─▶├─────┤      ┌─────────┐ │
+ │   │ port│   │ MPU │◀────▶│ Serial  │ │
+ │   └────┘    └─────┘      │  wire   │ │
+ │   ┌──────────────────┐   └─────────┘ │
+ │   │    Bus matrix    │               │
+ │   └──┬────────────┬──┘               │
+ │  Code if.    SRAM+periph. if.        │
+ └─────────────────────────────────────┘</div>
+      <div class="expl">
+        <b>Arhitektura:</b> Harvardska (odvojena programska i podatkovna sabirnica). <b>Širina podataka 32 bita</b>,
+        zapis little ili big endian (STM32 koristi little). Poravnanje: riječi na adresama ÷4, poluriječi ÷2,
+        bajtovi bilo gdje.
+      </div>
+      <h4 class="sh">Registri opće namjene</h4>
+      <ul class="clean">
+        <li><b>R0–R7</b> — niži registri; <b>R8–R12</b> — viši registri.</li>
+        <li><b>R13 = SP</b> (Stack Pointer, pokazivač stoga)</li>
+        <li><b>R14 = LR</b> (Link Register, povratna adresa potprograma)</li>
+        <li><b>R15 = PC</b> (Program Counter, programsko brojilo)</li>
+      </ul>
+      <h4 class="sh">Statusni i ostalo</h4>
+      <ul class="clean">
+        <li><b>APSR</b> — zastavice (N, Z, C, V…)</li>
+        <li><b>IPSR</b> — broj trenutne iznimke</li>
+        <li><b>EPSR</b> — stanje izvršavanja/prekida</li>
+      </ul>
+      <div class="note"><b>Iznimke (exceptions):</b> reset, iznimke uzrokovane greškama (faults), sistemske
+      iznimke (npr. SysTick, SVCall) i prekidi koje traže periferije (IRQ).</div>
+    </div>
+  </div>
+
+  <!-- NVIC + sabirnice -->
+  <div class="task">
+    <div class="q"><span class="badge">T20</span><span class="qt">NVIC, sabirnice procesora, upravljači/izvršioci, spajanje periferija</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram"> CSS ───────▶ NMI ┐
+ Peripherals ────┤
+ EXTI ──────▶IRQ ├─▶ NVIC ─▶ Cortex-M4 core
+ SysTick ────────┤   (System exceptions)
+                 ┘</div>
+      <div class="expl">
+        <b>NVIC</b> (Nested Vectored Interrupt Controller) obrađuje: nemaskirani prekid (<b>NMI</b>),
+        obične zahtjeve za prekid (<b>IRQ</b> od periferija/EXTI) i sistemske iznimke (npr. SysTick).
+        Podržava prioritete i ugnježđivanje prekida.
+      </div>
+      <h4 class="sh">Sabirnice procesora</h4>
+      <ul class="clean">
+        <li><b>I-bus</b> — dohvat instrukcija</li>
+        <li><b>D-bus</b> — dohvat podataka</li>
+        <li><b>S-bus (system)</b> — pristup periferijama</li>
+      </ul>
+      <h4 class="sh">Upravljači i izvršioci (bus master/slave)</h4>
+      <ul class="clean">
+        <li><b>Upravljači (masters):</b> Cortex jezgra, DMA, Ethernet, USB.</li>
+        <li><b>Izvršioci (slaves):</b> Flash, SRAM, AHB periferije.</li>
+      </ul>
+      <div class="note"><b>Spajanje periferija s vanjskim priključcima</b> mikrokontrolera izvodi se preko
+      <b>GPIO sklopovlja</b> (alternativne funkcije pinova).</div>
+    </div>
+  </div>
+
+  <!-- ARM pojmovi -->
+  <div class="task">
+    <div class="q"><span class="badge">T21</span><span class="qt">ARM — arhitektura vs jezgra vs µP · označavanje · ARM vs Thumb</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="expl">
+        <ul class="clean">
+          <li><b>Arhitektura</b> = specifikacija (npr. ARMv7) — definira što procesor radi, ne kako.</li>
+          <li><b>Procesorska jezgra</b> = fizička implementacija arhitekture (npr. Cortex-M4, Cortex-A).</li>
+          <li><b>Mikroprocesor / mikrokontroler</b> = integrirani krug koji sadrži jezgru (+ memoriju i periferije kod µC).</li>
+        </ul>
+      </div>
+      <h4 class="sh">Označavanje i skupovi instrukcija</h4>
+      <ul class="clean">
+        <li><b>Označavanje arhitekture:</b> verzija (32/64-bitna), skup instrukcija, profil (primjena).</li>
+        <li><b>Skupovi instrukcija (RISC):</b> <b>ARM32 (A32)</b> — 32-bitne instrukcije poravnate na 4 bajta;
+        <b>T32 (Thumb)</b> — 16/32-bitne instrukcije poravnate na 2 bajta (gušći kod).</li>
+        <li><b>Označavanje jezgri:</b> starije (ARM7), novije (Cortex-A/M/R).</li>
+        <li><b>ARM vs Thumb:</b> ARM skup ima uvjetno izvođenje (4-bitno polje uvjeta), Thumb koristi
+        IT (if-then) blokove za uvjetno izvođenje uz manju veličinu koda.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Oscilatori -->
+  <div class="task">
+    <div class="q"><span class="badge">T22</span><span class="qt">Kvarcni oscilator · sklopovlje za generiranje takta · izvori takta</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram">   ┌──[ Q (kvarc) ]──┐
+   │                 │
+ ──┴──▶│\   ┌──[Ra]──┴──▶ izlaz
+   │   │ A >─┘  pojačalo
+  [R1] │/
+   │
+  GND</div>
+      <div class="expl">
+        <b>Kvarcni oscilator:</b> pojačalo s povratnom vezom u kojoj je <b>kvarc (kristal)</b>. Kvarc na svojoj
+        rezonantnoj frekvenciji ima maksimalno pojačanje petlje pa sklop oscilira upravo na toj (vrlo stabilnoj
+        i točnoj) frekvenciji.
+      </div>
+      <h4 class="sh">Izvori takta (clock sources)</h4>
+      <ul class="clean">
+        <li><b>HSE</b> — high-speed external (vanjski kvarc, točan)</li>
+        <li><b>HSI</b> — high-speed internal (unutarnji RC, brz start ali manje točan)</li>
+        <li><b>LSE</b> — low-speed external (32.768 kHz, za RTC)</li>
+        <li><b>LSI</b> — low-speed internal (za watchdog)</li>
+      </ul>
+      <h4 class="sh">Redoslijed inicijalizacije takta</h4>
+      <ol class="clean" style="padding-left:22px">
+        <li>Pokreni vanjski oscilator: <b>HSEON</b>, čekaj <b>HSERDY</b>.</li>
+        <li>Konfiguriraj PLL (<code>PLLCFGR</code>: PLLM, PLLN, PLLP…).</li>
+        <li>Podesi djelila glavnog takta (<code>CFGR</code>: AHB, APB1, APB2 prescaler).</li>
+        <li>Odaberi PLL kao sistemski takt (<b>SYSCLK</b>) i čekaj prebacivanje.</li>
+      </ol>
+      <div class="note"><b>SystemInit()</b> inicijalizira osnovni takt i omogućuje pristup Flashu preko ART
+      akceleratora (poziva se vrlo rano, prije main()).</div>
+    </div>
+  </div>
+
+  <!-- Procesori opcenito / SoC -->
+  <div class="task">
+    <div class="q"><span class="badge">T23</span><span class="qt">Procesor vs mikrokontroler · "mikro" · SSI–ULSI · SoC</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="expl">
+        <ul class="clean">
+          <li><b>Procesor / mikroprocesor</b> — izvršava instrukcije programa; mikroprocesor je procesor na jednom IC-u
+          (treba vanjsku memoriju i periferije).</li>
+          <li><b>Kontroler / mikrokontroler</b> — upravlja drugim uređajima; mikrokontroler je čip koji <b>integrira
+          CPU + memoriju + periferije</b> (gotov ugradbeni sustav).</li>
+          <li><b>"mikro"</b> — označava visok stupanj integracije na fizički malom čipu.</li>
+        </ul>
+      </div>
+      <h4 class="sh">Tehnologije i vrste</h4>
+      <ul class="clean">
+        <li><b>Razine integracije:</b> SSI (Small Scale, ~10 tranzistora) → MSI → LSI → VLSI → <b>ULSI</b> (milijarde tranzistora).</li>
+        <li><b>Vrste po primjeni:</b> opći procesori (PC), mikrokontroleri (ugradbeni sustavi), grafički (GPU),
+        specijalizirani (DSP), SoC.</li>
+      </ul>
+      <div class="note"><b>SoC (System on Chip):</b> integrira CPU, memoriju i periferije na jednom čipu.
+      Prednosti: niža cijena, kraće vrijeme razvoja, manja potrošnja. Često se realizira u <b>FPGA</b> tehnologiji
+      (npr. soft-core procesor + namjenska logika).</div>
+    </div>
+  </div>
+
+  <!-- Napajanje -->
+  <div class="task">
+    <div class="q"><span class="badge">T24</span><span class="qt">Napajanje STM32F407 · serijski (linearni) regulator</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram"> +5V ──[F osigurač]──┬─────────┬────────┐
+                    │      ┌──┴──┐     │      +3.3V
+                  [D zener]│ REG │   [C in]   ──┬──
+                    │      │78R33│     │      [C out]
+                   GND     └──┬──┘    GND        │
+                              │                 GND
+                            +3.3V ──────────────┘</div>
+      <div class="expl">
+        Serijski (linearni) regulator (npr. 78R33) iz <b>+5V</b> daje stabilnih <b>+3.3V</b> za mikrokontroler.
+        <ul class="clean">
+          <li><b>Osigurač (F)</b> i <b>Zenerova dioda (D)</b> — zaštita od prevelike struje/napona.</li>
+          <li><b>Kondenzatori (C_in, C_out)</b> — filtriranje/stabilizacija.</li>
+          <li>Ulazni napon može biti od ~4.5V do 35V (npr. iz USB priključka, ~5V).</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAP / boundary-scan registri / ART -->
+  <div class="task">
+    <div class="q"><span class="badge">T25</span><span class="qt">TAP kontroler · registri boundary-scana · dijelovi ART akceleratora</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="expl">
+        <b>TAP kontroler</b> je <b>automat s konačnim brojem stanja</b> kojim upravlja signal <b>TMS</b>, a takta ga
+        <b>TCK</b>. Primjer upisa u <b>Instrukcijski registar (IR)</b>: na svakom rastućem bridu TCK mijenja se stanje:
+        <ul class="clean">
+          <li><b>Capture-IR</b> — u IR se učita predefinirana konstanta.</li>
+          <li><b>Shift-IR</b> — kroz IR se serijski uvodi instrukcija (TDI→TDO).</li>
+          <li><b>Update-IR</b> — instrukcija se pohranjuje i postaje aktivna.</li>
+        </ul>
+      </div>
+      <h4 class="sh">Registri boundary-scan sklopovlja</h4>
+      <ul class="clean">
+        <li><b>Boundary-scan registar</b> — sve granične ćelije (na pinovima).</li>
+        <li><b>Bypass (prospojni) registar</b> — 1-bitni "kratki spoj" TDI→TDO (preskakanje čipa).</li>
+        <li><b>Identifikacijski registar</b> — ID koda uređaja.</li>
+        <li><b>Instrukcijski registar</b> — trenutna JTAG instrukcija.</li>
+      </ul>
+      <div class="note"><b>ART akcelerator</b> = <b>prefetch</b> (predčitanje) + <b>cache</b> (instrukcijski i podatkovni)
+      koji ne traži stanja čekanja; iz 128-bitnog Flasha čita 4×32-bitne riječi u jednom pristupu.</div>
+    </div>
+  </div>
+
+  <!-- Programiranje Flasha -->
+  <div class="task">
+    <div class="q"><span class="badge">T26</span><span class="qt">Učitavanje programa u Flash: boot loader · programator · JTAG · IDE · uhodavanje</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="expl">
+        Tri načina upisa programa u Flash:
+        <ul class="clean">
+          <li><b>Ugrađeni boot loader</b> (System memory) — preko UART/USB, bez vanjske opreme (vidi
+          <a href="#" onclick="goT('T13');return false;" style="color:var(--acc)">T13</a>).</li>
+          <li><b>Namjenski programator</b> — mikrokontroler nije zalemljen nego priključen na programator;
+          odspaja se sve osim napajanja i izvora takta.</li>
+          <li><b>Sklopovlje za uhodavanje (JTAG/debug)</b> — program se preko Target Debuggera šalje na
+          <b>JTAG sučelje</b> čipa (omogućuje i debugiranje uživo).</li>
+        </ul>
+      </div>
+      <h4 class="sh">Razvoj i provjera</h4>
+      <ul class="clean">
+        <li><b>IDE (integrirano razvojno okruženje):</b> editor koda, compiler/assembler, debugger i simulator.</li>
+        <li><b>Elektromehanička provjera:</b> prije napajanja (mehanička integracija, električna povezanost),
+        nakon napajanja (temperatura, napon).</li>
+        <li><b>Funkcijsko uhodavanje:</b> provjera rada u razvojnom okruženju, periferija.</li>
+      </ul>
     </div>
   </div>
 </section>
@@ -1565,6 +1880,182 @@ DEBOUNCE: INPUT  s0, TIPKALO   <span class="com">; pročitaj stanje tipkala</spa
         <li><b>Dodatni 6</b> blok-shema 5 ulaznih VJ + VHDL + ASM čitanje</li>
         <li><b>Dodatni 1/2/3/10/11</b> = varijacije top-level sustava (prekid ili tipkalo kao okidač)</li>
       </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ DOPUNA ============================ -->
+<section class="panel" id="dop">
+  <div class="intro"><b>Dopuna — sortirana pitanja</b>. Zadaci i koncepti iz dokumenta "sortirana pitanja"
+  kojih nije bilo u ostalim ispitima: <b>TIM7 timer-prekid</b>, <b>EXTI 2 Hz</b>, <b>FLASH_ACR s WS argumentom</b>,
+  te dvije PicoBlaze reference. Sva proširena teorija (Cortex-M4, NVIC, oscilatori, SoC, SysTick detalji,
+  memorijska mapa…) je u tabu <b>📚 Teorija</b>, kartice <b>T16–T26</b>.</div>
+
+  <!-- TIM7 -->
+  <div class="task">
+    <div class="q"><span class="badge">D1</span><span class="qt">TIM7 prekid — pravokutni signal 1 Hz na GPIOB14</span>
+      <div class="qbody">TIM7 daje zahtjev za prekid svakih 100 ms. Prekidna funkcija generira pravokutni signal 1 Hz na
+      PB14 (spora vanjska jedinica, 2 stanja). Prioritet 2, PRIGROUP=0. Sve u main().</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">void</span> <span class="fn">init_Peripherals</span>(<span class="kw">void</span>){
+    RCC-&gt;AHB1ENR |= RCC_AHB1ENR_GPIOBEN;        <span class="com">// takt za GPIOB</span>
+    GPIOB-&gt;MODER &amp;= ~(<span class="num">0x3UL</span> &lt;&lt; (<span class="num">14</span>*<span class="num">2</span>));
+    GPIOB-&gt;MODER |=  (<span class="num">0x1UL</span> &lt;&lt; (<span class="num">14</span>*<span class="num">2</span>));      <span class="com">// PB14 izlaz</span>
+
+    RCC-&gt;APB1ENR |= RCC_APB1ENR_TIM7EN;         <span class="com">// takt za TIM7</span>
+    TIM7-&gt;PSC = <span class="num">9000</span> - <span class="num">1</span>;                     <span class="com">// prescaler (90MHz/9000 = 10kHz)</span>
+    TIM7-&gt;ARR = <span class="num">1000</span> - <span class="num">1</span>;                     <span class="com">// 10kHz/1000 = 100 Hz -> 100 ms prekid</span>
+    TIM7-&gt;DIER |= TIM_DIER_UIE;                 <span class="com">// prekid na update event</span>
+    TIM7-&gt;CR1  |= TIM_CR1_CEN;                  <span class="com">// pokreni brojilo</span>
+
+    NVIC_SetPriority(TIM7_IRQn, <span class="num">2</span>);
+    NVIC_EnableIRQ(TIM7_IRQn);
+}
+<span class="kw">void</span> <span class="fn">TIM7_IRQHandler</span>(<span class="kw">void</span>){
+    <span class="kw">if</span>(TIM7-&gt;SR &amp; TIM_SR_UIF){
+        TIM7-&gt;SR &amp;= ~TIM_SR_UIF;                <span class="com">// obriši zastavicu prekida</span>
+        GPIOB-&gt;ODR ^= (<span class="num">1UL</span> &lt;&lt; <span class="num">14</span>);            <span class="com">// toggle PB14</span>
+    }
+}
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){ <span class="fn">init_Peripherals</span>(); <span class="kw">while</span>(<span class="num">1</span>); }</code></pre>
+      <div class="expl"><b>Frekvencija izlaza:</b> prekid je svakih 100 ms → na svaki prekid <i>preklopimo (toggle)</i>
+      PB14. Puni period signala = 2 × 100 ms = 200 ms → <b>f = 1/0.2 s = 5 Hz</b>… pažnja: za točno <b>1 Hz</b>
+      period mora biti 1 s, pa toggle mora biti svakih 500 ms. Ako TIM7 fiksno daje prekid svakih 100 ms,
+      u handleru se broji 5 prekida prije toggla. <b>Iz zadatka:</b> ako je dozvoljeno mijenjati ARR, postavi
+      period prekida na 500 ms; inače dodaj softverski brojač.</div>
+      <div class="note"><b>Ključ timer-prekida:</b> <code>PSC</code> (prescaler) i <code>ARR</code> (auto-reload)
+      određuju period, <code>DIER.UIE</code> omogućuje prekid, <code>CR1.CEN</code> pokreće brojilo, a u handleru
+      se OBAVEZNO briše <code>SR.UIF</code>.</div>
+    </div>
+  </div>
+
+  <!-- EXTI 2 Hz -->
+  <div class="task">
+    <div class="q"><span class="badge">D2</span><span class="qt">EXTI GPIOD3 — pravokutni signal 2 Hz na GPIOB14</span>
+      <div class="qbody">Vanjska jedinica na GPIOD3 daje rastuće bridove svakih 10 ms. Na svaki prekid generiraj pravokutni
+      2 Hz na PB14. Prioritet 2, PRIGROUP=0. Ne dirati nekorištene pinove.</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">volatile uint32_t</span> cnt = <span class="num">0</span>;
+
+<span class="kw">void</span> <span class="fn">init_GPIO</span>(<span class="kw">void</span>){
+    RCC-&gt;AHB1ENR |= RCC_AHB1ENR_GPIODEN | RCC_AHB1ENR_GPIOBEN;
+    RCC-&gt;APB2ENR |= RCC_APB2ENR_SYSCFGEN;
+    GPIOD-&gt;MODER &amp;= ~(<span class="num">0x3UL</span> &lt;&lt; (<span class="num">3</span>*<span class="num">2</span>));        <span class="com">// PD3 ulaz</span>
+    GPIOB-&gt;MODER |=  (<span class="num">0x1UL</span> &lt;&lt; (<span class="num">14</span>*<span class="num">2</span>));       <span class="com">// PB14 izlaz</span>
+
+    SYSCFG-&gt;EXTICR[<span class="num">0</span>] |= SYSCFG_EXTICR1_EXTI3_PD; <span class="com">// EXTI3 = port D</span>
+    EXTI-&gt;IMR  |= EXTI_IMR_MR3;
+    EXTI-&gt;RTSR |= EXTI_RTSR_TR3;                 <span class="com">// rastući brid</span>
+    NVIC_SetPriority(EXTI3_IRQn, <span class="num">2</span>);
+    NVIC_EnableIRQ(EXTI3_IRQn);
+}
+<span class="kw">void</span> <span class="fn">EXTI3_IRQHandler</span>(<span class="kw">void</span>){
+    EXTI-&gt;PR |= EXTI_PR_PR3;                     <span class="com">// obriši zahtjev</span>
+    <span class="kw">if</span>(++cnt == <span class="num">25</span>){                          <span class="com">// 25 × 10 ms = 250 ms</span>
+        GPIOB-&gt;ODR ^= (<span class="num">1UL</span> &lt;&lt; <span class="num">14</span>);             <span class="com">// toggle -> period 500 ms = 2 Hz</span>
+        cnt = <span class="num">0</span>;
+    }
+}
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){ <span class="fn">init_GPIO</span>(); <span class="kw">while</span>(<span class="num">1</span>); }</code></pre>
+      <div class="expl"><b>Računica:</b> ulazni bridovi dolaze svakih 10 ms. Za <b>2 Hz</b> treba period 500 ms, tj. toggle
+      svakih 250 ms = svakih <b>25 bridova</b>. Zato softverski brojač <code>cnt</code>. (Jednostavna verzija s
+      ispita radi toggle na <i>svaki</i> brid, što bi dalo 50 Hz — ispravno je brojati bridove.)</div>
+      <div class="note">Verzija s ispita koristila je <code>FTSR</code> (padajući brid); zadatak traži
+      <b>rastući</b> → koristi <code>RTSR</code>. EXTICR[0] pokriva EXTI linije 0–3.</div>
+    </div>
+  </div>
+
+  <!-- FLASH_ACR param -->
+  <div class="task">
+    <div class="q"><span class="badge">D3</span><span class="qt">FLASH_ACR s parametrom WS (init_FlashAccess) — 3V, ~110 MHz</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">void</span> <span class="fn">init_FlashAccess</span>(<span class="kw">unsigned long</span> WS){
+    FLASH-&gt;ACR = WS
+               | (<span class="num">0x1UL</span> &lt;&lt; <span class="num">8</span>)    <span class="com">// PRFTEN  - predčitanje</span>
+               | (<span class="num">0x1UL</span> &lt;&lt; <span class="num">9</span>)    <span class="com">// ICEN    - instrukcijski cache</span>
+               | (<span class="num">0x1UL</span> &lt;&lt; <span class="num">10</span>);  <span class="com">// DCEN    - podatkovni cache</span>
+    <span class="kw">while</span>((FLASH-&gt;ACR &amp; <span class="num">0x7</span>) != WS);     <span class="com">// čekaj da se LATENCY postavi</span>
+}
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){
+    <span class="kw">unsigned long</span> WS = <span class="num">3</span>;            <span class="com">// ~110 MHz @ 3V -> 3 wait statea</span>
+    <span class="fn">init_FlashAccess</span>(WS);
+    <span class="kw">while</span>(<span class="num">1</span>);
+}</code></pre>
+      <div class="expl"><b>Polje LATENCY</b> su najniža 3 bita <code>FLASH_ACR</code> (zato maska <code>0x7</code>).
+      WS se predaje kao argument, a bitovi 8/9/10 uključuju prefetch + oba cachea. <code>while</code> petlja čeka
+      da se LATENCY stvarno upiše prije nastavka. Vidi <a href="#" onclick="goT('T9');return false;" style="color:var(--acc)">T9</a>.</div>
+    </div>
+  </div>
+
+  <!-- PicoBlaze 5 ulaznih -->
+  <div class="task">
+    <div class="q"><span class="badge">D4</span><span class="qt">PicoBlaze — 5 ulaznih jedinica (blok shema + VHDL + ASM)</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram"> [4]┐
+ [3]┤
+ [2]┼─▶ MUX ─▶ D ─▶ in_port[7:0] ─▶│ kcpsm6 │
+ [1]┤         (reg)                │ read_strobe ▶
+ [0]┘  PORT 01                     │ port_id[7:0]│
+                clk ──────────────▶│ clk         │</div>
+      <pre><code><span class="kw">entity</span> Input_Interface <span class="kw">is</span>
+    <span class="kw">port</span>( clk:       <span class="kw">in</span>  std_logic;
+          port01:    <span class="kw">in</span>  std_logic_vector(<span class="num">4</span> <span class="kw">downto</span> <span class="num">0</span>);  <span class="com">-- 5 ulaznih jedinica</span>
+          read_data: <span class="kw">out</span> std_logic_vector(<span class="num">4</span> <span class="kw">downto</span> <span class="num">0</span>));
+<span class="kw">end</span> Input_Interface;
+
+<span class="kw">architecture</span> Behavioral <span class="kw">of</span> Input_Interface <span class="kw">is</span>
+<span class="kw">begin</span>
+    <span class="kw">process</span>(clk)
+    <span class="kw">begin</span>
+        <span class="kw">if</span> rising_edge(clk) <span class="kw">then</span>
+            read_data &lt;= port01;     <span class="com">-- registrirano čitanje 5 ulaza</span>
+        <span class="kw">end if</span>;
+    <span class="kw">end process</span>;
+<span class="kw">end</span> Behavioral;</code></pre>
+      <pre><code><span class="com">; PORT 01 je na adresi 0x01</span>
+START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita svih 5 bitova jednom operacijom</span>
+       STORE  s0, R1        <span class="com">; spremi u registar</span>
+       ; ... obrada ...
+       JUMP   START         <span class="com">; ponavljaj</span></code></pre>
+      <div class="expl">Svih 5 jedinica dijele isti <b>port_id (0x01)</b> i čitaju se jednom <code>INPUT</code> naredbom
+      (5 bitova istog porta). MUX/registar prije <code>in_port</code> osigurava sinkrono uzorkovanje. Više <i>različitih</i>
+      ulaznih jedinica dekodiralo bi se preko <code>read_strobe</code> + različitih <code>port_id</code>.</div>
+    </div>
+  </div>
+
+  <!-- PicoBlaze VJ signali -->
+  <div class="task">
+    <div class="q"><span class="badge">D5</span><span class="qt">PicoBlaze — blok dijagram VJ (prima na 0x20, šalje na 0x40) + signali</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram"> in_port[7:0] ──▶┌──────────┐──▶ out_port[7:0]
+                 │ I/O Ports│──▶ write_strobe
+                 │          │──▶ read_strobe
+                 │          │──▶ port_id[7:0]
+                 └──────────┘
+                    ▲ clk, reset</div>
+      <div class="expl">
+        Signali kojima vanjska jedinica i PicoBlaze komuniciraju s logikom za spajanje:
+        <ul class="clean">
+          <li><b>clock</b> — sinkronizira operacije</li>
+          <li><b>reset</b> — postavlja registre u početno stanje</li>
+          <li><b>port_id[7:0]</b> — adresa na kojoj se čita/piše (0x20 ulaz, 0x40 izlaz)</li>
+          <li><b>in_port[7:0]</b> — podaci u procesor (od ulazne VJ)</li>
+          <li><b>out_port[7:0]</b> — podaci iz procesora (na izlaznu VJ)</li>
+          <li><b>write_strobe</b> — podatak se upisuje u vanjsku jedinicu (uz OUTPUT)</li>
+          <li><b>read_strobe</b> — podatak se čita iz vanjske jedinice (uz INPUT)</li>
+        </ul>
+      </div>
+      <pre><code>    LOAD   s0, <span class="num">0x34</span>     <span class="com">; primjer podatka</span>
+    OUTPUT s0, <span class="num">0x20</span>     <span class="com">; pošalji na adresu 0x20 (write_strobe + port_id=0x20)</span>
+    INPUT  s1, <span class="num">0x40</span>     <span class="com">; čitaj s adrese 0x40 (read_strobe + port_id=0x40)</span>
+    STORE  s1, R10</code></pre>
     </div>
   </div>
 </section>
