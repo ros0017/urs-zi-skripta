@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>URS — Završni ispit · Riješeni ispiti i teorija</title>
+<style>
+  :root{
+    --bg:#0f1420; --bg2:#161d2e; --card:#1b2335; --card2:#212b40;
+    --line:#2c3a55; --txt:#e6ebf4; --mut:#9aa7bf; --acc:#5b9dff; --acc2:#36d399;
+    --warn:#ffb454; --code-bg:#11192a; --kw:#c792ea; --str:#c3e88d; --com:#5c6e8a;
+    --num:#f78c6c; --fn:#82aaff; --q:#243049;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+    background:linear-gradient(160deg,#0f1420,#0c1019);color:var(--txt);line-height:1.6}
+  header{padding:30px 24px 22px;text-align:center;border-bottom:1px solid var(--line);
+    background:radial-gradient(circle at 50% -40%,#1e3a66,transparent 60%)}
+  header h1{margin:0 0 6px;font-size:2.05rem;letter-spacing:.5px}
+  header p{margin:0;color:var(--mut);font-size:.98rem}
+  header .sub{margin-top:10px;font-size:.82rem;color:var(--acc2)}
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 18px 80px}
+
+  /* Tabs */
+  .tabs{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;gap:6px;
+    padding:12px 6px;margin:0 -6px 22px;background:rgba(15,20,32,.92);
+    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .tab{padding:8px 15px;border:1px solid var(--line);border-radius:9px;cursor:pointer;
+    background:var(--card);color:var(--mut);font-weight:600;font-size:.9rem;transition:.15s;user-select:none}
+  .tab:hover{border-color:var(--acc);color:var(--txt)}
+  .tab.active{background:var(--acc);color:#06101f;border-color:var(--acc)}
+
+  .panel{display:none;animation:fade .25s}
+  .panel.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+
+  .intro{background:var(--card2);border:1px solid var(--line);border-left:4px solid var(--acc2);
+    padding:14px 18px;border-radius:10px;margin-bottom:22px;color:var(--mut);font-size:.92rem}
+  .intro b{color:var(--txt)}
+
+  /* Task card */
+  .task{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    margin-bottom:18px;overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+  .q{background:var(--q);padding:14px 18px;border-bottom:1px solid var(--line)}
+  .q .badge{display:inline-block;font-size:.72rem;font-weight:700;color:#06101f;
+    background:var(--acc);padding:2px 9px;border-radius:20px;margin-right:8px;vertical-align:middle}
+  .q .pts{float:right;font-size:.74rem;color:var(--warn);font-weight:700;
+    border:1px solid var(--warn);padding:1px 8px;border-radius:20px}
+  .q .qt{font-weight:600;color:var(--txt)}
+  .q .qbody{margin-top:6px;color:var(--mut);font-size:.93rem}
+
+  .toggle{display:flex;align-items:center;gap:8px;cursor:pointer;padding:10px 18px;
+    color:var(--acc);font-weight:600;font-size:.86rem;user-select:none;background:var(--card)}
+  .toggle:hover{background:var(--card2)}
+  .toggle .arrow{transition:.2s;display:inline-block}
+  .toggle.open .arrow{transform:rotate(90deg)}
+  .sol{display:none;padding:4px 18px 18px;border-top:1px solid var(--line)}
+  .sol.open{display:block}
+
+  h4.sh{margin:16px 0 6px;font-size:.84rem;text-transform:uppercase;letter-spacing:1px;
+    color:var(--acc2)}
+  .expl{background:var(--card2);border-left:3px solid var(--acc2);padding:11px 15px;
+    border-radius:0 8px 8px 0;margin:10px 0;font-size:.93rem}
+  .expl b{color:#cfe9ff}
+  .note{background:#2a2233;border-left:3px solid var(--warn);padding:10px 15px;
+    border-radius:0 8px 8px 0;margin:10px 0;font-size:.9rem;color:#f3dcc0}
+
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:9px;
+    padding:13px 15px;overflow-x:auto;margin:10px 0;font-size:.86rem;line-height:1.5}
+  code{font-family:"JetBrains Mono","Consolas","Courier New",monospace}
+  pre code{color:#d6e0f2}
+  .kw{color:var(--kw)} .str{color:var(--str)} .com{color:var(--com);font-style:italic}
+  .num{color:var(--num)} .fn{color:var(--fn)} .reg{color:#ffd479}
+
+  ul.clean{margin:8px 0;padding-left:20px}
+  ul.clean li{margin:3px 0}
+  table.t{border-collapse:collapse;width:100%;margin:10px 0;font-size:.88rem}
+  table.t th,table.t td{border:1px solid var(--line);padding:7px 10px;text-align:left}
+  table.t th{background:var(--card2);color:var(--acc)}
+
+  .diagram{background:var(--code-bg);border:1px solid var(--line);border-radius:9px;
+    padding:14px;margin:10px 0;font-family:"JetBrains Mono",monospace;font-size:.8rem;
+    white-space:pre;overflow-x:auto;color:#a8c5e8;line-height:1.35}
+
+  .controls{display:flex;gap:10px;justify-content:flex-end;margin-bottom:14px;flex-wrap:wrap}
+  .btn{background:var(--card);border:1px solid var(--line);color:var(--mut);padding:6px 13px;
+    border-radius:8px;cursor:pointer;font-size:.82rem;font-weight:600}
+  .btn:hover{border-color:var(--acc);color:var(--txt)}
+  footer{text-align:center;color:var(--com);font-size:.8rem;padding:24px}
+  a.up{position:fixed;bottom:22px;right:22px;background:var(--acc);color:#06101f;
+    width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-size:1.3rem;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.4);font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚙️ URS — Završni ispit</h1>
+  <p>Riješeni ispiti 2021–2024 · STM32F407 · PicoBlaze · VHDL · FPGA</p>
+  <div class="sub">Ugradbeni računalni sustavi · skripta s detaljnim objašnjenjima</div>
+</header>
+
+<div class="wrap">
+  <nav class="tabs" id="tabs">
+    <div class="tab active" data-p="t">📚 Teorija</div>
+    <div class="tab" data-p="z2024">ZI 2024</div>
+    <div class="tab" data-p="z2023">ZI 2023</div>
+    <div class="tab" data-p="z2022">ZI 21/22</div>
+    <div class="tab" data-p="z2021">ZI 2021</div>
+    <div class="tab" data-p="z2020">ZI 20/21 + Dodatni</div>
+  </nav>
+
+  <div class="controls">
+    <button class="btn" onclick="allSol(true)">▼ Otvori sva rješenja</button>
+    <button class="btn" onclick="allSol(false)">▲ Zatvori sva rješenja</button>
+  </div>
+
+<!-- ============================ TEORIJA ============================ -->
+<section class="panel active" id="t">
+  <div class="intro">
+    <b>Sažeta teorija</b> — koncepti koji se <i>ponavljaju iz godine u godinu</i>. Nauči ovo i pokriješ
+    sve teorijske zadatke (2 boda komadi) na ispitu. Detaljni primjeri koda su uz pojedine ispite.
+  </div>
+
+  <!-- PROM -->
+  <div class="task">
+    <div class="q"><span class="badge">T1</span><span class="qt">Veličina PROM memorije za logičku funkciju</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="expl">
+        Za logičku funkciju s <b>k ulaza</b> i <b>n izlaza</b> veličina PROM-a je:
+        <pre><code>veličina = 2<sup>k</sup> · n  (bitova)</code></pre>
+        <b>Zašto?</b> PROM funkcionira kao look-up tablica: za svaku moguću kombinaciju ulaza pohranjuje
+        izlaz. Broj kombinacija ulaza = <b>2<sup>k</sup></b> (to su adrese/retci), a u svakom retku
+        moramo pohraniti <b>n</b> izlaznih bitova (širina riječi). Otud umnožak.
+      </div>
+      <h4 class="sh">Tipični brojevi s ispita</h4>
+      <table class="t">
+        <tr><th>k (ulaza)</th><th>n (izlaza)</th><th>Veličina</th></tr>
+        <tr><td>8</td><td>32</td><td>2⁸·32 = 256·32 = <b>8192 bita</b></td></tr>
+        <tr><td>8</td><td>16</td><td>2⁸·16 = 256·16 = <b>4096 bita</b></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- PAL/GAL -->
+  <div class="task">
+    <div class="q"><span class="badge">T2</span><span class="qt">Razlika PAL i GAL sklopova</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="expl">
+        <b>GAL</b> (Generic Array Logic) se može <b>više puta reprogramirati</b> (koristi
+        EEPROM ćelije), dok se <b>PAL</b> (Programmable Array Logic) može programirati
+        <b>samo jednom</b> (osigurači — fuse, koji se trajno pregore).
+      </div>
+      <div class="note"><b>Dodatno (povratna veza u PAL):</b> povratna veza s izlaza natrag u
+      AND matricu omogućuje izvedbu sekvencijalne logike (stanja) i dijeljenje produkt-termova
+      među izlazima — bez nje PAL bi mogao samo čistu kombinacijsku logiku.</div>
+    </div>
+  </div>
+
+  <!-- PROM vs PLD ravnine -->
+  <div class="task">
+    <div class="q"><span class="badge">T3</span><span class="qt">Dvije ravnine kod PLD-a · PROM vs PLD</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="expl">
+        Kod jednostavnih programabilnih sklopova postoje dvije ravnine (matrice): <b>AND matrica</b>
+        i <b>OR matrica</b>. Fiksna AND matrica naziva se <b>dekoder</b>.
+        <ul class="clean">
+          <li><b>PROM</b> — fiksna AND matrica (dekoder), programabilna OR matrica.</li>
+          <li><b>PLA</b> — i AND i OR matrica programabilne.</li>
+          <li><b>PAL/GAL</b> — programabilna AND, fiksna OR matrica.</li>
+        </ul>
+        <b>Osnovna razlika PROM↔PLD:</b> PLD <b>nema fiksni dekoder</b> (programabilna AND matrica),
+        dok ga PROM ima.
+      </div>
+      <div class="note"><b>Porodice PLD sklopova:</b> PROM, PAL, PLA, GAL, CPLD i FPGA.</div>
+    </div>
+  </div>
+
+  <!-- CPLD -->
+  <div class="task">
+    <div class="q"><span class="badge">T4</span><span class="qt">Blok shema CPLD sklopa</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram">┌──────┐                                  ┌──────┐
+│ I/O  │   ┌───────────┐  ┌───────────┐   │ I/O  │
+│block │──▶│ PAL-like  │  │ PAL-like  │◀──│block │
+└──────┘   │  block    │  │  block    │   └──────┘
+   ▲       └─────┬─────┘  └─────┬─────┘      ▲
+   │             ▼               ▼            │
+   │        ┌──────────────────────────┐     │
+   │◀──────▶│   Interconnection matrix │◀────▶│
+   │        └──────────────────────────┘     │
+   ▼             ▲               ▲            ▼
+┌──────┐   ┌─────┴─────┐  ┌─────┴─────┐   ┌──────┐
+│ I/O  │──▶│ PAL-like  │  │ PAL-like  │◀──│ I/O  │
+│block │   │  block    │  │  block    │   │block │
+└──────┘   └───────────┘  └───────────┘   └──────┘</div>
+      <div class="expl">CPLD = više <b>PAL-like blokova</b> povezanih programabilnom
+      <b>interconnect</b> matricom, s <b>I/O blokovima</b> na rubovima. Predvidljiviji timing
+      od FPGA jer su putevi kroz centralnu matricu fiksne duljine.</div>
+    </div>
+  </div>
+
+  <!-- Spartan-3 -->
+  <div class="task">
+    <div class="q"><span class="badge">T5</span><span class="qt">5 osnovnih blokova Spartan-3 FPGA</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <ul class="clean">
+        <li><b>CLB</b> (Configurable Logic Blocks) — programabilni za bilo koju logičku funkciju ili pohranu podataka.</li>
+        <li><b>IOB</b> (Ulazno/Izlazni blokovi) — kontroliraju protok podataka između vanjskih pinova i unutarnje logike.</li>
+        <li><b>Block RAM</b> (Memorijski blokovi) — pohrana podataka u 18 Kb memorijama.</li>
+        <li><b>Blokovi za množenje</b> — 18-bitni ulazi, računaju 36-bitni produkt.</li>
+        <li><b>DCM</b> (Digital Clock Manager) — sinkronizacija takta po cijelom sklopu; množenje, dijeljenje i fazni pomak signala vremenskog vođenja.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- PicoBlaze -->
+  <div class="task">
+    <div class="q"><span class="badge">T6</span><span class="qt">Arhitektura PicoBlaze procesora</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <ul class="clean">
+        <li><b>8-bitni</b> soft-core procesor (KCPSM — "Constant (K) Coded Programmable State Machine").</li>
+        <li>S obzirom na skup naredbi: <b>RISC</b>. S obzirom na memoriju: <b>Harvardska</b> arhitektura (odvojena programska i podatkovna memorija).</li>
+        <li>Naredbe su <b>18-bitne</b>, sve traju <b>2 takta</b>. Programska memorija u Block RAM-u (0.5K/1K/2K/4K instrukcija).</li>
+        <li>Može se spojiti <b>256 ulaznih + 256 izlaznih</b> vanjskih jedinica (8-bitni <code>port_id</code>).</li>
+        <li>Dvije zastavice: <b>Z (Zero)</b> i <b>C (Carry)</b>.</li>
+        <li>ALU: AND, OR, XOR, zbrajanje, oduzimanje, pomak/rotacija, TEST, COMPARE.</li>
+        <li>Glavni signali: <code>address, instruction, port_id, in_port, out_port, read_strobe, write_strobe, interrupt, interrupt_ack, reset, clk</code>.</li>
+      </ul>
+      <div class="note"><b>TEST instrukcija:</b> <code>TEST sX, kk</code> radi AND nad podacima (ne sprema rezultat,
+      samo postavlja zastavice). <b>C</b> = 1 ako je broj jedinica u rezultatu <i>neparan</i> (paritet) →
+      koristi se za ispitivanje pariteta. <b>Z</b> = 1 ako su svi bitovi rezultata 0.</div>
+    </div>
+  </div>
+
+  <!-- PLL -->
+  <div class="task">
+    <div class="q"><span class="badge">T7</span><span class="qt">Princip rada PLL sklopa</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram">         ┌─────┐   ┌─────┐   ┌─────┐
+ f_in ──▶│ PD  │──▶│ NPF │──▶│ VCO │──┬──▶ f_out = N·f_in
+         └─────┘   └─────┘   └─────┘  │
+            ▲                         │
+            │      ┌──────────┐       │
+            └──────│ Brojilo  │◀──────┘
+                   │   /N     │
+                   └──────────┘</div>
+      <div class="expl">
+        PLL (Phase-Locked Loop) sastoji se od:
+        <ul class="clean">
+          <li><b>Fazni detektor (PD)</b> + <b>niskopropusni filtar (NPF)</b> — izlaz u₃(t) proporcionalan je
+          razlici faza ulaznih signala u₁(t) i u₂(t).</li>
+          <li><b>Naponski upravljani oscilator (VCO)</b> — izlazna frekvencija proporcionalna je ulaznom naponu.</li>
+          <li><b>Brojilo /N</b> u povratnoj vezi.</li>
+        </ul>
+        <b>Množenje frekvencije:</b> PD uspoređuje f_in s podijeljenim izlazom (f_out/N). U zaključanom
+        stanju te su frekvencije jednake → <b>f_out = N · f_in</b>. Ako f_in poraste, PD podiže napon, VCO
+        digne f_out dok se omjer ne uravnoteži.
+      </div>
+      <div class="note"><b>STM32 PLL:</b> izvor (PLLSRC) je HSE ili HSI → dijeli se s /M → množi s ×N
+      (VCO) → izlazne grane /P (sistemski takt), /Q (USB), /R. Status: PLLRDY, omogućavanje: PLLON.</div>
+    </div>
+  </div>
+
+  <!-- RC oscilator -->
+  <div class="task">
+    <div class="q"><span class="badge">T8</span><span class="qt">RC oscilator sa Schmittovim okidnim sklopom</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram">      ┌──────[ R1 ]──────┐
+      │                  │
+ Uc ──┴──▷○──────────────┴──── U_izl
+      │   74HCT14
+    ──┴──  (Schmitt inverter)
+    ──┬──  C1
+      │
+     GND
+
+ Uc:   ╱‾‾╲    ╱‾‾╲     (puni se / prazni po eksponencijali
+      ╱    ╲  ╱    ╲     između U_gornje i U_donje)
+ Uiz: ‾‾│__│‾‾│__│‾‾   (pravokutni izlaz)</div>
+      <div class="expl">
+        Schmitt-trigger invertor s <b>otpornikom R u povratnoj vezi</b> i <b>kondenzatorom C prema masi</b>.
+        Na početku je C prazan (Uc=0V) → invertor daje 1 na izlazu → C se puni preko R po eksponencijali.
+        Kad Uc dosegne <b>gornji prag (U_gornje)</b>, invertor daje 0 → C se prazni. Kad Uc padne na
+        <b>donji prag (U_donje)</b>, ciklus se ponavlja. Histereza Schmitt sklopa daje dva praga.
+        <br><b>Svojstva:</b> vrlo pouzdan, odmah starta, ali nije osobito točan ni stabilan za precizna mjerenja.
+      </div>
+    </div>
+  </div>
+
+  <!-- Flash + WS -->
+  <div class="task">
+    <div class="q"><span class="badge">T9</span><span class="qt">Inicijalizacija Flash sučelja i stanja čekanja (WS)</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="expl">
+        <b>Zašto stanja čekanja (wait states)?</b> Najveća frekvencija procesora je u pravilu <i>veća</i>
+        od najveće frekvencije rada Flash memorije. Da procesor ne čita "smeće" dok Flash još nije
+        spreman, ubacuju se WS — dodatni taktovi čekanja po pristupu.
+        <br><br><b>Broj WS</b> ovisi o <b>naponu napajanja</b> i <b>frekvenciji takta (HCLK)</b> (vrijednosti
+        daje proizvođač). Zadaje se u registru <code>FLASH_ACR</code>, polje <b>LATENCY</b> (najniža 3 bita).
+      </div>
+      <h4 class="sh">Promjena frekvencije — redoslijed je bitan!</h4>
+      <table class="t">
+        <tr><th>Povećavamo HCLK ↑</th><th>Smanjujemo HCLK ↓</th></tr>
+        <tr>
+          <td>1. Postavi <b>veći</b> WS u LATENCY<br>2. Čekaj dok LATENCY ne pročita zadani WS<br>3. <b>Tek onda</b> povećaj frekvenciju</td>
+          <td>1. <b>Prvo</b> smanji frekvenciju<br>2. Postavi <b>manji</b> WS u LATENCY<br>3. Čekaj dok LATENCY ne pročita zadani WS</td>
+        </tr>
+      </table>
+      <div class="note">Logika: pri povećanju frekvencije Flash mora <i>unaprijed</i> dobiti više WS;
+      pri smanjenju frekvencije <i>prvo</i> usporimo procesor pa tek onda smanjimo WS.</div>
+    </div>
+  </div>
+
+  <!-- Prefetch / ART -->
+  <div class="task">
+    <div class="q"><span class="badge">T10</span><span class="qt">Predčitanje (prefetch) operacijskog koda · ART akcelerator</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="expl">
+        Procesor radi na visokoj frekvenciji pa čitanje iz Flasha traži stanja čekanja. <b>Predčitanje</b>
+        (prefetch) ubrzava rad: Flash je organiziran kao <b>128-bitan</b> — u jednom pristupu čita se
+        <b>4 × 32-bitne riječi</b> odjednom, instrukcije se dohvaćaju "unaprijed", a dodaje se i priručna
+        memorija (cache) koja ne traži stanja čekanja.
+        <br><br>Ideja konvejera: dok se izvršavaju instrukcije 1–4, već se dohvaća instrukcija 5 (za vrijeme
+        dekodiranja). Tako se "skriva" latencija Flasha. Ovaj mehanizam STM zove <b>ART akcelerator</b>
+        (Adaptive Real-Time accelerator).
+      </div>
+    </div>
+  </div>
+
+  <!-- ARM data types -->
+  <div class="task">
+    <div class="q"><span class="badge">T11</span><span class="qt">Veličine podataka u ARM arhitekturi i poravnanje</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <table class="t">
+        <tr><th>Naziv</th><th>Veličina</th><th>Poravnanje (adresa počinje na…)</th></tr>
+        <tr><td>byte (bajt)</td><td>8 bita</td><td>bilo koja adresa</td></tr>
+        <tr><td>halfword (poluriječ)</td><td>16 bita</td><td>parna adresa (0,2,4…)</td></tr>
+        <tr><td>word (riječ)</td><td>32 bita</td><td>višekratnik 4 (0,4,8,12…)</td></tr>
+        <tr><td>doubleword</td><td>64 bita</td><td>višekratnik 8</td></tr>
+      </table>
+      <div class="expl"><b>Zapis u memoriji</b> (većina arhitektura podržava oba):
+        <ul class="clean">
+          <li><b>Little endian</b> — manje značajni bajt na nižoj adresi.</li>
+          <li><b>Big endian</b> — značajniji bajt na nižoj adresi.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reset control -->
+  <div class="task">
+    <div class="q"><span class="badge">T12</span><span class="qt">Sklopovlje za upravljanje resetom</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram">          △ VDD
+          │
+         [R] pritezni otpornik
+          │      ┌────────┐   ┌──────┐
+ NRST ────┼─────▶│ Filter │──▶│ │‾‾  │────▶ System reset
+   ▭      │      └────────┘   └──────┘
+(tipka)   │      ┌──────────┐ ── Power reset
+          └─────│ Pulse gen │── IWDG reset
+                │ (min 20us)│── WWDG reset
+                └──────────┘ ── Software reset
+                             ── Low-power mgmt reset</div>
+      <div class="expl">
+        <ul class="clean">
+          <li><b>NRST priključak</b> (sivi kvadratić + tipka) — reset koji traži korisnik ili vanjsko sklopovlje.</li>
+          <li><b>Pritezni otpornik prema VDD</b> — vanjski i unutrašnji reset se objedinjuju "ožičenim I" (wired-AND).</li>
+          <li><b>Filter</b> — uklanja kratke smetnje na NRST liniji.</li>
+          <li><b>Pulse generator</b> (min. 20 µs) — generira reset impuls dovoljne duljine za procesor, periferije i vanjski priključak.</li>
+        </ul>
+        <b>Unutrašnji izvori reseta:</b>
+        <ul class="clean">
+          <li><b>Power reset</b> — pri priključenju napajanja ili kratkom propadu napajanja.</li>
+          <li><b>IWDG / WWDG reset</b> — zatražio watchdog.</li>
+          <li><b>Software reset</b> — postavljanjem bita u RCC_CSR (programski).</li>
+          <li><b>Low-power management reset</b> — kod izlaska iz režima niske potrošnje.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Boot loader -->
+  <div class="task">
+    <div class="q"><span class="badge">T13</span><span class="qt">Učitavanje programa u Flash preko boot loadera</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="expl">
+        Ugrađeni program (<b>boot loader</b>) nalazi se u <b>sistemskoj memoriji</b> mikrokontrolera i:
+        <ul class="clean">
+          <li>inicijalizira sklopovlje mikrokontrolera,</li>
+          <li>uspostavlja vezu s osobnim računalom (USB / RS232),</li>
+          <li>učitava sadržaj Flash memorije s računala,</li>
+          <li>upisuje učitane podatke u Flash memoriju.</li>
+        </ul>
+        Sistemska memorija postaje boot memorija odabirom: <b>BOOT1 = 0, BOOT0 = 1</b>. Nakon reseta
+        procesor izvršava boot loader iz sistemske memorije.
+      </div>
+      <div class="note">Lanac alata: uVision (editor → assembler/compiler → linker/loader → OBJ→HEX) →
+      STM32CubeProgrammer (HEX→BIN) → preko USB/RS232 → ugrađeni boot loader → Flash.</div>
+    </div>
+  </div>
+
+  <!-- Boundary scan -->
+  <div class="task">
+    <div class="q"><span class="badge">T14</span><span class="qt">Boundary-scan (JTAG) arhitektura</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="diagram">       ulazni priključci
+       ▢  ▢  ▢  ▢  ▢
+ TDI ─▶■──■──■──■──■─┐
+ TCK ─▶ ┌───────────┐│
+ TMS ─▶ │ DIGITALNI ││
+        │  SUSTAV   ││
+ TDO ◀─ └───────────┘│
+       ■──■──■──■──■─┘
+       ▢  ▢  ▢  ▢  ▢
+       izlazni priključci</div>
+      <div class="expl">
+        Na svaki ulazni/izlazni priključak integriranog sklopa stavi se po jedna <b>boundary-scan ćelija</b>.
+        Ćelije su povezane u <b>posmačni registar (shift register)</b> — podatke serijski upisujemo (preko TDI)
+        ili ispisujemo (preko TDO). Svaka ćelija ima serijski i paralelan ulaz/izlaz i može se odspojiti.
+        <br>Možemo: <b>puniti lanac</b>, <b>pobuđivati</b> (forsirati) signale na priključke, ili
+        <b>zapamtiti</b> što je stiglo i kasnije pročitati — sve preko bistabila u ćelijama.
+      </div>
+      <h4 class="sh">Upravljački signali (TAP)</h4>
+      <ul class="clean">
+        <li><b>TDI</b> — Test Data In (serijski ulaz)</li>
+        <li><b>TDO</b> — Test Data Out (serijski izlaz)</li>
+        <li><b>TCK</b> — Test Clock</li>
+        <li><b>TMS</b> — Test Mode Select (upravlja stanjima TAP automata)</li>
+      </ul>
+      <div class="note">Više IC-ova na pločici spaja se u <b>daisy-chain</b>: TDO jednog → TDI sljedećeg,
+      dok su TCK i TMS zajednički svima.</div>
+    </div>
+  </div>
+
+  <!-- VHDL objekti -->
+  <div class="task">
+    <div class="q"><span class="badge">T15</span><span class="qt">VHDL osnove — entity, architecture, objekti</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="expl">
+        <b>Entity</b> = "sučelje" sklopa: deklariraju se ulazi/izlazi (port), jesu li jednobitni
+        (<code>std_logic</code>) ili vektori (<code>std_logic_vector</code>) i koliko bita. Tu se deklarira i CLK.
+        <br><b>Architecture</b> = "unutrašnjost" sklopa: definira logiku rada — procesi, funkcije, signali i
+        pomoćne varijable.
+        <br><b>Tri osnovna objekta:</b> <b>signal</b>, <b>varijabla</b> i <b>konstanta</b>.
+      </div>
+      <h4 class="sh">SPI — povezivanje mastera s 3 neovisna slavea</h4>
+      <div class="diagram"> SPI Master            SPI Slave 1/2/3
+ SCLK ───────┬──────┬──────▶ SCLK
+ MOSI ───────┼──────┼──────▶ MOSI
+ MISO ◀──────┼──────┼─────── MISO
+ SS1  ──────────────────────▶ SS  (slave 1)
+ SS2  ──────────────────────▶ SS  (slave 2)
+ SS3  ──────────────────────▶ SS  (slave 3)</div>
+      <div class="expl"><b>Neovisni slave uređaji:</b> SCLK, MOSI, MISO su zajednički, ali svaki slave ima
+      <b>vlastiti SS</b> signal. Master pazi da je u svakom trenutku aktivan <i>samo jedan</i> SS kako ne bi
+      došlo do kolizije na MISO liniji.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ZI 2024 ============================ -->
+<section class="panel" id="z2024">
+  <div class="intro"><b>URS ZI 2024</b> — 11 zadataka. Naglasak: zvučnik + scanf/printf (retargeting),
+  vanjski prekidi (EXTI), te ponavljajuća teorija (reset, prefetch, PROM, PicoBlaze, VHDL).</div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z1</span><span class="pts">7 bod</span><span class="qt">Zvučnik — kratak/dugačak ton ovisno o pročitanoj vrijednosti</span>
+      <div class="qbody">Čitaj 3-bitnu vrijednost s GPIOD0–2 i preko zvučnika (GPIOE11) emitiraj kratak ton
+      (500 ms) ako je broj &lt; 4, inače dugačak (2000 ms); razmak 300 ms. Koristiti <code>scanf()</code>/<code>printf()</code>
+      s retargetingom (semihost). Dane su <code>init_GPIOD()</code>, <code>init_GPIOE()</code>, <code>Pause(ms)</code>.</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <div class="note"><b>Vučićev savjet:</b> retargeting (<code>fputc</code>) treba osigurati da zvučnik <i>pišti</i>
+      — printf-u dajemo ono što treba "ispisati", a fputc paljenjem/gašenjem GPIOE11 generira ton. Argument
+      printf-a NIJE direktno paljenje zvučnika, nego pištanje (broj tonova/trajanje).</div>
+      <h4 class="sh">retarget.c — fgetc čita GPIOD0–2, fputc generira ton</h4>
+      <pre><code><span class="com">// retarget.c</span>
+<span class="kw">#include</span> &lt;stdio.h&gt;
+<span class="kw">#include</span> &lt;rt_sys.h&gt;
+<span class="kw">extern void</span> <span class="fn">Pause</span>(<span class="kw">unsigned int</span>);
+
+__asm(<span class="str">".global __use_no_semihosting"</span>);
+
+<span class="com">// čitanje 3-bitne vrijednosti s GPIOD0-GPIOD2</span>
+<span class="kw">int</span> <span class="fn">fgetc</span>(FILE *f){
+    (<span class="kw">void</span>)f;
+    <span class="kw">return</span> (GPIOD-&gt;IDR &amp; <span class="num">0x00000007</span>);   <span class="com">// maska bita 0-2</span>
+}
+
+<span class="com">// "ispis" = generiranje tona na zvučniku GPIOE11</span>
+<span class="kw">int</span> <span class="fn">fputc</span>(<span class="kw">int</span> trajanje, FILE *f){
+    (<span class="kw">void</span>)f;
+    GPIOE-&gt;ODR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">11</span>);   <span class="com">// upali zvučnik (pišti)</span>
+    <span class="fn">Pause</span>(trajanje);            <span class="com">// drži ton</span>
+    GPIOE-&gt;ODR &amp;= ~(<span class="num">1UL</span> &lt;&lt; <span class="num">11</span>);  <span class="com">// ugasi zvučnik</span>
+    <span class="kw">return</span> trajanje;
+}
+<span class="kw">int</span> <span class="fn">ferror</span>(FILE *f){ (<span class="kw">void</span>)f; <span class="kw">return</span> <span class="num">0</span>; }
+__attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exit</span>(<span class="kw">int</span> rc){ (<span class="kw">void</span>)rc; <span class="kw">while</span>(<span class="num">1</span>); }</code></pre>
+      <h4 class="sh">main.c</h4>
+      <pre><code><span class="kw">#include</span> &lt;stm32f407xx.h&gt;
+<span class="kw">#include</span> &lt;stdio.h&gt;
+<span class="kw">extern void</span> <span class="fn">init_GPIOD</span>(<span class="kw">void</span>);
+<span class="kw">extern void</span> <span class="fn">init_GPIOE</span>(<span class="kw">void</span>);
+<span class="kw">extern void</span> <span class="fn">Pause</span>(<span class="kw">unsigned int</span>);
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){
+    <span class="fn">init_GPIOD</span>();
+    <span class="fn">init_GPIOE</span>();
+    <span class="kw">volatile int</span> broj;
+    <span class="kw">while</span>(<span class="num">1</span>){
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;broj);          <span class="com">// pročitaj GPIOD0-2 (preko fgetc)</span>
+        <span class="kw">if</span>(broj &lt; <span class="num">4</span>)
+            <span class="fn">printf</span>(<span class="str">"%d"</span>, <span class="num">500</span>);       <span class="com">// kratak ton 500 ms</span>
+        <span class="kw">else</span>
+            <span class="fn">printf</span>(<span class="str">"%d"</span>, <span class="num">2000</span>);      <span class="com">// dugačak ton 2000 ms</span>
+        <span class="fn">Pause</span>(<span class="num">300</span>);                  <span class="com">// razmak između tonova</span>
+    }
+}</code></pre>
+      <div class="expl"><b>Ključ zadatka:</b> "retargeting" znači preusmjeriti standardne I/O funkcije.
+      <code>scanf</code> interno zove <code>fgetc</code> (čita GPIO), a <code>printf</code> zove <code>fputc</code>
+      (svaki znak → jedan ton). Trik je da trajanje tona predamo printf-u, a fputc napravi pisak odgovarajuće duljine.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z2</span><span class="pts">4 bod</span><span class="qt">Vanjski prekidi (EXTI) — uključi/isključi motor</span>
+      <div class="qbody">Prekidi od GPIOD1 i GPIOD2 (padajući brid). Prekid prve jedinice <b>uključuje</b>, druge
+      <b>isključuje</b> motor (GPIOE11). Prioritet 4, PRIGROUP=0. Sve inicijalizirati u <code>main()</code>.</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">void</span> <span class="fn">init_EXTI1_EXTI2</span>(<span class="kw">void</span>){
+    <span class="kw">volatile uint32_t</span> tmp;
+    RCC-&gt;AHB1ENR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">3</span>);    <span class="com">// takt za GPIOD</span>
+    RCC-&gt;AHB1ENR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">4</span>);    <span class="com">// takt za GPIOE</span>
+    RCC-&gt;APB2ENR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">14</span>);   <span class="com">// takt za SYSCFG</span>
+    tmp = RCC-&gt;AHB1ENR;               <span class="com">// dummy read</span>
+
+    NVIC_SetPriority(EXTI1_IRQn, <span class="num">4</span>);  NVIC_EnableIRQ(EXTI1_IRQn);
+    NVIC_SetPriority(EXTI2_IRQn, <span class="num">4</span>);  NVIC_EnableIRQ(EXTI2_IRQn);
+
+    SYSCFG-&gt;EXTICR[<span class="num">0</span>] |= (<span class="num">0x3</span> &lt;&lt; <span class="num">4</span>);  <span class="com">// EXTI1 linija = port D</span>
+    SYSCFG-&gt;EXTICR[<span class="num">0</span>] |= (<span class="num">0x3</span> &lt;&lt; <span class="num">8</span>);  <span class="com">// EXTI2 linija = port D</span>
+
+    EXTI-&gt;FTSR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">1</span>);  EXTI-&gt;IMR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">1</span>); <span class="com">// padajući brid, maska linije 1</span>
+    EXTI-&gt;FTSR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">2</span>);  EXTI-&gt;IMR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">2</span>); <span class="com">// padajući brid, maska linije 2</span>
+}
+
+<span class="kw">void</span> __attribute__((interrupt)) <span class="fn">EXTI1_IRQHandler</span>(<span class="kw">void</span>){
+    GPIOE-&gt;ODR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">11</span>);   <span class="com">// UKLJUČI motor</span>
+    EXTI-&gt;PR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">1</span>);      <span class="com">// obriši zastavicu (upis 1!)</span>
+}
+<span class="kw">void</span> __attribute__((interrupt)) <span class="fn">EXTI2_IRQHandler</span>(<span class="kw">void</span>){
+    GPIOE-&gt;ODR &amp;= ~(<span class="num">1UL</span> &lt;&lt; <span class="num">11</span>);  <span class="com">// ISKLJUČI motor</span>
+    EXTI-&gt;PR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">2</span>);
+}
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){
+    RCC-&gt;AHB1ENR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">4</span>);     <span class="com">// GPIOE takt</span>
+    GPIOE-&gt;MODER |= (<span class="num">1UL</span> &lt;&lt; <span class="num">22</span>);    <span class="com">// PE11 izlaz (bit 22-23)</span>
+    <span class="fn">init_EXTI1_EXTI2</span>();
+    <span class="kw">while</span>(<span class="num">1</span>);
+}</code></pre>
+      <div class="expl"><b>Postupak EXTI:</b> (1) takt za GPIO + SYSCFG, (2) <code>SYSCFG_EXTICR</code> bira koji port ide
+      na koju EXTI liniju, (3) <code>FTSR</code> = padajući brid (RTSR bi bio rastući), (4) <code>IMR</code>
+      otključa (unmask) liniju, (5) NVIC prioritet i enable. <b>U handleru OBAVEZNO</b> obriši zastavicu
+      upisom <b>1</b> u <code>EXTI_PR</code> — inače beskonačno ponavljanje prekida.</div>
+      <div class="note">Identičan zadatak je u <b>JIR 21/22 Z11</b> i <b>LJIR 20/21 Z11</b> (samo zamijenjene uloge
+      uključi/isključi). EXTICR[0] pokriva linije 0–3.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z3</span><span class="pts">2 bod</span><span class="qt">Sklopovlje za upravljanje resetom</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">Vidi <a href="#" onclick="goT('T12');return false;" style="color:var(--acc)">Teorija T12 — Upravljanje resetom</a>.</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z4</span><span class="pts">2 bod</span><span class="qt">Predčitanje operacijskog koda</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">Vidi <a href="#" onclick="goT('T10');return false;" style="color:var(--acc)">Teorija T10 — Prefetch / ART</a>.</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z5</span><span class="pts">2 bod</span><span class="qt">PROM za 8 ulaza, 32 izlaza</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">2⁸·32 = <b>8192 bita</b>. Vidi <a href="#" onclick="goT('T1');return false;" style="color:var(--acc)">Teorija T1</a>.</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z6</span><span class="pts">2 bod</span><span class="qt">Max broj VJ na PicoBlaze</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl"><b>256 ulaznih</b> i <b>256 izlaznih</b> vanjskih jedinica (ukupno 512). Vidi <a href="#" onclick="goT('T6');return false;" style="color:var(--acc)">Teorija T6</a>.</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z7</span><span class="pts">2 bod</span><span class="qt">5 blokova Spartan-3</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">CLB, IOB, Block RAM, blokovi za množenje, DCM. Vidi <a href="#" onclick="goT('T5');return false;" style="color:var(--acc)">Teorija T5</a>.</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z8</span><span class="pts">1 bod</span><span class="qt">Razlika PAL i GAL</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">GAL = reprogramabilan više puta, PAL = jednokratno. Vidi <a href="#" onclick="goT('T2');return false;" style="color:var(--acc)">Teorija T2</a>.</div></div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z9</span><span class="pts">2 bod</span><span class="qt">VHDL MUX 4:1 — odabirna logika (generička širina)</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">library</span> IEEE;
+<span class="kw">use</span> IEEE.std_logic_1164.<span class="kw">all</span>;
+
+<span class="kw">entity</span> sklop <span class="kw">is</span>
+    <span class="kw">generic</span> (N: <span class="kw">integer</span> := <span class="num">8</span>);
+    <span class="kw">port</span>( a, b, c, d: <span class="kw">in</span>  std_logic_vector(N<span class="num">-1</span> <span class="kw">downto</span> <span class="num">0</span>);
+          sel:        <span class="kw">in</span>  std_logic_vector(<span class="num">1</span> <span class="kw">downto</span> <span class="num">0</span>);
+          izlaz:      <span class="kw">out</span> std_logic_vector(N<span class="num">-1</span> <span class="kw">downto</span> <span class="num">0</span>));
+<span class="kw">end</span> sklop;
+
+<span class="kw">architecture</span> arch <span class="kw">of</span> sklop <span class="kw">is</span>
+<span class="kw">begin</span>
+    <span class="kw">with</span> sel <span class="kw">select</span>
+        izlaz &lt;= a <span class="kw">when</span> <span class="str">"00"</span>,
+                 b <span class="kw">when</span> <span class="str">"01"</span>,
+                 c <span class="kw">when</span> <span class="str">"10"</span>,
+                 d <span class="kw">when others</span>;
+<span class="kw">end</span> arch;</code></pre>
+      <div class="note"><b>Pažnja:</b> sel za 4 ulaza treba biti <code>(1 downto 0)</code> = 2 bita (u originalnom
+      rješenju s ispita stoji <code>(4 downto 0)</code> što je <i>greška</i>). "Odabirna logika" = konstrukt
+      <code>with…select</code> (za razliku od "uvjetne logike" = <code>when…else</code>).</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z10</span><span class="pts">2 bod</span><span class="qt">VHDL vanjska jedinica "kvadrat" + PicoBlaze program</span>
+      <div class="qbody">VJ prima 8-bitni podatak na 0x10, na 0x20/0x21 vraća kvadrat (niži/viši bajt).</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">entity</span> square <span class="kw">is</span>
+    <span class="kw">port</span>( clk, rst:    <span class="kw">in</span>  std_logic;
+          port_id:      <span class="kw">in</span>  std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);
+          in_port:      <span class="kw">in</span>  std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);
+          write_strobe: <span class="kw">in</span>  std_logic;
+          out_port:     <span class="kw">out</span> std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);
+          read_strobe:  <span class="kw">in</span>  std_logic);
+<span class="kw">end</span> square;
+
+<span class="kw">architecture</span> arch <span class="kw">of</span> square <span class="kw">is</span>
+<span class="kw">begin</span>
+  <span class="kw">process</span>(clk, rst)
+    <span class="kw">variable</span> sq: std_logic_vector(<span class="num">15</span> <span class="kw">downto</span> <span class="num">0</span>) := (<span class="kw">others</span> =&gt; <span class="str">'0'</span>);
+  <span class="kw">begin</span>
+    <span class="kw">if</span> rst = <span class="str">'1'</span> <span class="kw">then</span>
+        sq := (<span class="kw">others</span> =&gt; <span class="str">'0'</span>);
+    <span class="kw">elsif</span> rising_edge(clk) <span class="kw">then</span>
+        <span class="kw">if</span> port_id = <span class="str">"00010000"</span> <span class="kw">and</span> write_strobe = <span class="str">'1'</span> <span class="kw">then</span>
+            sq := in_port * in_port;          <span class="com">// 0x10: upiši i izračunaj kvadrat</span>
+        <span class="kw">elsif</span> read_strobe = <span class="str">'1'</span> <span class="kw">then</span>
+            <span class="kw">if</span>    port_id = <span class="str">"00100000"</span> <span class="kw">then</span> out_port &lt;= sq(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);  <span class="com">// 0x20 niži</span>
+            <span class="kw">elsif</span> port_id = <span class="str">"00100001"</span> <span class="kw">then</span> out_port &lt;= sq(<span class="num">15</span> <span class="kw">downto</span> <span class="num">8</span>); <span class="com">// 0x21 viši</span>
+            <span class="kw">end if</span>;
+        <span class="kw">end if</span>;
+    <span class="kw">end if</span>;
+  <span class="kw">end process</span>;
+<span class="kw">end</span> arch;</code></pre>
+      <h4 class="sh">PicoBlaze program (R2 → R8, R9)</h4>
+      <pre><code><span class="com">; program.psm — kvadrat iz registra s2, rezultat u s8 (niži) i s9 (viši)</span>
+    OUTPUT  s2, <span class="num">10</span>     <span class="com">; pošalji broj VJ-u na adresu 0x10</span>
+    INPUT   s8, <span class="num">20</span>     <span class="com">; pročitaj niži bajt rezultata (0x20)</span>
+    INPUT   s9, <span class="num">21</span>     <span class="com">; pročitaj viši bajt rezultata (0x21)</span></code></pre>
+      <div class="expl"><b>Logika:</b> množenje radi VHDL hardver (vanjska jedinica), a PicoBlaze samo
+      "preda broj i pokupi rezultat". <code>write_strobe</code> ide uz OUTPUT, <code>read_strobe</code> uz INPUT;
+      <code>port_id</code> bira adresu registra unutar jedinice.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z11</span><span class="pts">4 bod</span><span class="qt">PicoBlaze — kvadrat broja 60₁₀ preko vanjske jedinice</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="com">; 60 dekadski = 0x3C</span>
+    LOAD   s0, <span class="num">3C</span>     <span class="com">; učitaj broj 60</span>
+    OUTPUT s0, <span class="num">10</span>     <span class="com">; pošalji ga VJ-u na 0x10</span>
+    INPUT  s8, <span class="num">20</span>     <span class="com">; niži bajt kvadrata (3600 = 0x0E10 -> 0x10)</span>
+    INPUT  s9, <span class="num">21</span>     <span class="com">; viši bajt kvadrata (0x0E)</span></code></pre>
+      <div class="expl">60² = 3600 = 0x0E10 → niži bajt 0x10 (na 0x20), viši bajt 0x0E (na 0x21). Koristi se ista
+      vanjska jedinica kao u Z10.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ZI 2023 ============================ -->
+<section class="panel" id="z2023">
+  <div class="intro"><b>URS ZI 2023</b> — 12 zadataka. Novo u odnosu na ostale: inicijalizacija Flasha (Z2),
+  brojanje bridova s resetom (Z3), PLL detaljno (Z4), ARM tipovi (Z5), pomični prosjek filter (Z12).</div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z1</span><span class="qt">Čitaj 2-bitnu vrijednost s GPIOD0–1, ispiši na GPIOB14/15 po pravilu</span>
+      <div class="qbody">0 → 0 na oba; parna → B14=1 (B15 nepromijenjen); neparna → B14=B15=1. scanf/printf + retargeting.</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="com">// retarget.c</span>
+<span class="kw">int</span> <span class="fn">fgetc</span>(FILE *f){ (<span class="kw">void</span>)f; <span class="kw">return</span> (GPIOD-&gt;IDR &amp; <span class="num">0x3</span>); } <span class="com">// 2 bita: D0-D1</span>
+<span class="kw">int</span> <span class="fn">fputc</span>(<span class="kw">int</span> c, FILE *f){ (<span class="kw">void</span>)f; <span class="com">// c = vrijednost koju ispisujemo</span>
+    <span class="kw">if</span>(c == <span class="num">0</span>){
+        GPIOB-&gt;ODR &amp;= ~((<span class="num">1UL</span>&lt;&lt;<span class="num">14</span>)|(<span class="num">1UL</span>&lt;&lt;<span class="num">15</span>)); <span class="com">// oba 0</span>
+    } <span class="kw">else if</span>((c &amp; <span class="num">1</span>) == <span class="num">0</span>){
+        GPIOB-&gt;ODR |= (<span class="num">1UL</span>&lt;&lt;<span class="num">14</span>);            <span class="com">// parna: B14=1, B15 isti</span>
+    } <span class="kw">else</span> {
+        GPIOB-&gt;ODR |= ((<span class="num">1UL</span>&lt;&lt;<span class="num">14</span>)|(<span class="num">1UL</span>&lt;&lt;<span class="num">15</span>)); <span class="com">// neparna: oba 1</span>
+    }
+    <span class="kw">return</span> c;
+}</code></pre>
+      <pre><code><span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){
+    <span class="fn">init_GPIOD</span>();             <span class="com">// dana funkcija (mora i GPIOB konfigurirati izlazno)</span>
+    <span class="kw">volatile int</span> v;
+    <span class="kw">while</span>(<span class="num">1</span>){ <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;v); <span class="fn">printf</span>(<span class="str">"%d"</span>, v); }
+}</code></pre>
+      <div class="note">Tekst zadatka miješa GPIOD14/15 i GPIOB14/15 — logika ostaje ista, samo pripazi koji port
+      je izlazni. "Parna" se ovdje ispituje kao najniži bit = 0.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z2</span><span class="qt">Inicijalizacija Flash sučelja — 2V, 90 MHz, prefetch + cache</span>
+      <div class="qbody"><code>void init_Flash(void)</code></div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">void</span> <span class="fn">init_Flash</span>(<span class="kw">void</span>){
+    <span class="com">// Za napon ~2.1-2.4V i HCLK 90 MHz -> 3 wait statea (LATENCY = 3)</span>
+    <span class="com">// (tablica iz datasheeta: pri 2.0V granice su ~22/44/66/88 MHz po WS)</span>
+    FLASH-&gt;ACR &amp;= ~FLASH_ACR_LATENCY;         <span class="com">// očisti polje LATENCY</span>
+    FLASH-&gt;ACR |=  FLASH_ACR_LATENCY_3WS;     <span class="com">// 3 stanja čekanja</span>
+    FLASH-&gt;ACR |=  FLASH_ACR_PRFTEN;          <span class="com">// prefetch enable</span>
+    FLASH-&gt;ACR |=  FLASH_ACR_ICEN;            <span class="com">// instrukcijski cache</span>
+    FLASH-&gt;ACR |=  FLASH_ACR_DCEN;            <span class="com">// podatkovni cache</span>
+
+    <span class="com">// provjeri da je LATENCY stvarno postavljen</span>
+    <span class="kw">while</span>((FLASH-&gt;ACR &amp; FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_3WS);
+}</code></pre>
+      <div class="expl"><b>Broj WS</b> se određuje iz tablice (napon × frekvencija). Na ~2V granica po WS-u je niža
+      nego na 3.3V, pa 90 MHz traži 3 WS. <b>PRFTEN</b> = predčitanje, <b>ICEN/DCEN</b> = instrukcijski i podatkovni
+      cache. Vidi <a href="#" onclick="goT('T9');return false;" style="color:var(--acc)">Teorija T9</a>.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z3</span><span class="qt">Brojanje padajućih bridova (GPIOD0) + reset brojača (GPIOD1)</span>
+      <div class="qbody">Broj bridova ispisuj na GPIOB12–15. Pull-up na D0/D1, B12–15 spori izlazi. Prioritet 2.</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">volatile uint32_t</span> brojac = <span class="num">0</span>;
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){
+    <span class="kw">volatile uint32_t</span> tmp;
+    RCC-&gt;AHB1ENR |= (<span class="num">1UL</span>&lt;&lt;<span class="num">3</span>)|(<span class="num">1UL</span>&lt;&lt;<span class="num">1</span>); <span class="com">// GPIOD + GPIOB takt</span>
+    RCC-&gt;APB2ENR |= (<span class="num">1UL</span>&lt;&lt;<span class="num">14</span>); tmp = RCC-&gt;APB2ENR; <span class="com">// SYSCFG</span>
+
+    GPIOD-&gt;MODER &amp;= ~((<span class="num">3UL</span>&lt;&lt;<span class="num">0</span>)|(<span class="num">3UL</span>&lt;&lt;<span class="num">2</span>)); <span class="com">// D0,D1 ulazni</span>
+    GPIOD-&gt;PUPDR &amp;= ~((<span class="num">3UL</span>&lt;&lt;<span class="num">0</span>)|(<span class="num">3UL</span>&lt;&lt;<span class="num">2</span>));
+    GPIOD-&gt;PUPDR |=  ((<span class="num">1UL</span>&lt;&lt;<span class="num">0</span>)|(<span class="num">1UL</span>&lt;&lt;<span class="num">2</span>)); <span class="com">// pull-up prema napajanju</span>
+
+    GPIOB-&gt;MODER &amp;= ~(<span class="num">0xFFUL</span>&lt;&lt;<span class="num">24</span>);          <span class="com">// B12-15</span>
+    GPIOB-&gt;MODER |=  (<span class="num">0x55UL</span>&lt;&lt;<span class="num">24</span>);          <span class="com">// B12-15 izlazni</span>
+    GPIOB-&gt;OSPEEDR &amp;= ~(<span class="num">0xFFUL</span>&lt;&lt;<span class="num">24</span>);        <span class="com">// spori priključci (00)</span>
+
+    SYSCFG-&gt;EXTICR[<span class="num">0</span>] |= (<span class="num">0x3</span>&lt;&lt;<span class="num">0</span>)|(<span class="num">0x3</span>&lt;&lt;<span class="num">4</span>); <span class="com">// EXTI0,1 = port D</span>
+    EXTI-&gt;FTSR |= (<span class="num">1UL</span>&lt;&lt;<span class="num">0</span>)|(<span class="num">1UL</span>&lt;&lt;<span class="num">1</span>);
+    EXTI-&gt;IMR  |= (<span class="num">1UL</span>&lt;&lt;<span class="num">0</span>)|(<span class="num">1UL</span>&lt;&lt;<span class="num">1</span>);
+    NVIC_SetPriority(EXTI0_IRQn,<span class="num">2</span>); NVIC_EnableIRQ(EXTI0_IRQn);
+    NVIC_SetPriority(EXTI1_IRQn,<span class="num">2</span>); NVIC_EnableIRQ(EXTI1_IRQn);
+
+    <span class="kw">while</span>(<span class="num">1</span>){
+        GPIOB-&gt;ODR = (GPIOB-&gt;ODR &amp; ~(<span class="num">0xFUL</span>&lt;&lt;<span class="num">12</span>))
+                   | ((brojac &amp; <span class="num">0xF</span>) &lt;&lt; <span class="num">12</span>);   <span class="com">// ispiši brojač na B12-15</span>
+    }
+}
+<span class="kw">void</span> __attribute__((interrupt)) <span class="fn">EXTI0_IRQHandler</span>(<span class="kw">void</span>){ <span class="com">// D0 = brid</span>
+    brojac++; EXTI-&gt;PR |= (<span class="num">1UL</span>&lt;&lt;<span class="num">0</span>);
+}
+<span class="kw">void</span> __attribute__((interrupt)) <span class="fn">EXTI1_IRQHandler</span>(<span class="kw">void</span>){ <span class="com">// D1 = reset</span>
+    brojac = <span class="num">0</span>; EXTI-&gt;PR |= (<span class="num">1UL</span>&lt;&lt;<span class="num">1</span>);
+}</code></pre>
+      <div class="expl">Dvije EXTI linije (D0 broji, D1 resetira), prioritet 2. Brojanje i reset su <b>u prekidnim
+      funkcijama</b>, a ispis u glavnoj petlji — kako zadatak traži. Pull-up jer su jedinice s otvorenim izlazom.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z4</span><span class="qt">PLL — blokovska shema i princip rada</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">Vidi <a href="#" onclick="goT('T7');return false;" style="color:var(--acc)">Teorija T7 — PLL</a>.</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z5</span><span class="qt">Veličine podataka u ARM-u i poravnanje</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">Vidi <a href="#" onclick="goT('T11');return false;" style="color:var(--acc)">Teorija T11</a>.</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z6</span><span class="qt">PROM 8 ulaza / 32 izlaza</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">2⁸·32 = <b>8192 bita</b>. Vidi <a href="#" onclick="goT('T1');return false;" style="color:var(--acc)">Teorija T1</a>.</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z7</span><span class="qt">Razlika PAL i GAL</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">Vidi <a href="#" onclick="goT('T2');return false;" style="color:var(--acc)">Teorija T2</a>.</div></div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z8</span><span class="qt">VHDL MUX 4:1 — uvjetna logika (when…else)</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">entity</span> when_ent <span class="kw">is</span>
+    <span class="kw">generic</span>(width: <span class="kw">integer</span> := <span class="num">8</span>);
+    <span class="kw">port</span>( a, b, c, d: <span class="kw">in</span>  std_logic_vector(width<span class="num">-1</span> <span class="kw">downto</span> <span class="num">0</span>);
+          selector:   <span class="kw">in</span>  std_logic_vector(<span class="num">1</span> <span class="kw">downto</span> <span class="num">0</span>);
+          T:          <span class="kw">out</span> std_logic_vector(width<span class="num">-1</span> <span class="kw">downto</span> <span class="num">0</span>));
+<span class="kw">end</span> when_ent;
+
+<span class="kw">architecture</span> bhv <span class="kw">of</span> when_ent <span class="kw">is</span>
+<span class="kw">begin</span>
+    T &lt;= a <span class="kw">when</span> selector = <span class="str">"00"</span> <span class="kw">else</span>
+         b <span class="kw">when</span> selector = <span class="str">"01"</span> <span class="kw">else</span>
+         c <span class="kw">when</span> selector = <span class="str">"10"</span> <span class="kw">else</span>
+         d;
+<span class="kw">end</span> bhv;</code></pre>
+      <div class="note"><b>Razlika:</b> "odabirna logika" = <code>with…select</code> (Z9 u 2024); "uvjetna logika" =
+      <code>when…else</code> (ovdje). Funkcionalno isto, drugačiji sintaktički konstrukt.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z9</span><span class="qt">Max VJ na PicoBlaze</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">256 ulaznih + 256 izlaznih = 512. Vidi <a href="#" onclick="goT('T6');return false;" style="color:var(--acc)">Teorija T6</a>.</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z10</span><span class="qt">5 blokova Spartan-3</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">CLB, IOB, Block RAM, množila, DCM. Vidi <a href="#" onclick="goT('T5');return false;" style="color:var(--acc)">Teorija T5</a>.</div></div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z11</span><span class="qt">VHDL 16-bitni registar s asinkronim resetom</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">library</span> IEEE;
+<span class="kw">use</span> IEEE.std_logic_1164.<span class="kw">all</span>;
+
+<span class="kw">entity</span> reg <span class="kw">is</span> <span class="kw">port</span>(
+    reg_val: <span class="kw">out</span> std_logic_vector(<span class="num">15</span> <span class="kw">downto</span> <span class="num">0</span>);
+    reset:   <span class="kw">in</span>  std_logic;
+    clk:     <span class="kw">in</span>  std_logic;
+    in_val:  <span class="kw">in</span>  std_logic_vector(<span class="num">15</span> <span class="kw">downto</span> <span class="num">0</span>));
+<span class="kw">end</span> reg;
+
+<span class="kw">architecture</span> reg_arh <span class="kw">of</span> reg <span class="kw">is</span>
+<span class="kw">begin</span>
+    <span class="kw">process</span>(clk, reset)        <span class="com">// reset u listi osjetljivosti = asinkron!</span>
+    <span class="kw">begin</span>
+        <span class="kw">if</span> reset = <span class="str">'1'</span> <span class="kw">then</span>
+            reg_val &lt;= (<span class="kw">others</span> =&gt; <span class="str">'0'</span>);
+        <span class="kw">elsif</span> rising_edge(clk) <span class="kw">then</span>
+            reg_val &lt;= in_val;
+        <span class="kw">end if</span>;
+    <span class="kw">end process</span>;
+<span class="kw">end</span> reg_arh;</code></pre>
+      <div class="expl"><b>Asinkroni reset</b> = reset je u <i>listi osjetljivosti procesa</i> i provjerava se <b>prije</b>
+      <code>rising_edge(clk)</code>, pa djeluje neovisno o taktu. Da je sinkroni, reset bi bio <i>unutar</i> grane
+      <code>rising_edge(clk)</code>.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z12</span><span class="pts">5 bod</span><span class="qt">VHDL — filter pomičnog prosjeka (Moving Average, N=4)</span>
+      <div class="qbody">Sučelje KCPSM6. Registri: Ulaz 0x10, Izlaz 0x20, Reset 0x30. y[n]=¼(x[n]+x[n+1]+x[n+2]+x[n+3]).</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">library</span> IEEE;
+<span class="kw">use</span> IEEE.std_logic_1164.<span class="kw">all</span>;
+<span class="kw">use</span> IEEE.std_logic_unsigned.<span class="kw">all</span>;
+
+<span class="kw">entity</span> movavg4 <span class="kw">is</span> <span class="kw">port</span>(
+    clk, rst:     <span class="kw">in</span>  std_logic;
+    port_id:      <span class="kw">in</span>  std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);   <span class="com">// adresna sabirnica</span>
+    in_port:      <span class="kw">in</span>  std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);   <span class="com">// na out_port od KCPSM6</span>
+    write_strobe: <span class="kw">in</span>  std_logic;
+    out_port:     <span class="kw">out</span> std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);   <span class="com">// na in_port od KCPSM6</span>
+    read_strobe:  <span class="kw">in</span>  std_logic);
+<span class="kw">end entity</span>;
+
+<span class="kw">architecture</span> arch <span class="kw">of</span> movavg4 <span class="kw">is</span>
+    <span class="kw">signal</span> x3, x2, x1, x0, result: std_logic_vector(<span class="num">9</span> <span class="kw">downto</span> <span class="num">0</span>) := (<span class="kw">others</span>=&gt;<span class="str">'0'</span>);
+    <span class="kw">signal</span> pun: std_logic_vector(<span class="num">2</span> <span class="kw">downto</span> <span class="num">0</span>) := <span class="str">"000"</span>;  <span class="com">// brojač punjenja (4)</span>
+<span class="kw">begin</span>
+  output: <span class="kw">process</span>(clk)
+  <span class="kw">begin</span>
+    <span class="kw">if</span> rising_edge(clk) <span class="kw">then</span>
+        <span class="kw">if</span> rst = <span class="str">'1'</span> <span class="kw">or</span> (port_id = <span class="str">"00110000"</span> <span class="kw">and</span> write_strobe = <span class="str">'1'</span>) <span class="kw">then</span>
+            x3&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>); x2&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>);
+            x1&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>); x0&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>);
+            result&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>); out_port&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>); pun&lt;=<span class="str">"000"</span>; <span class="com">// 0x30 = reset</span>
+        <span class="kw">else</span>
+            <span class="kw">if</span> write_strobe = <span class="str">'1'</span> <span class="kw">then</span>          <span class="com">// upis novog uzorka (0x10)</span>
+                <span class="kw">if</span> pun /= <span class="str">"100"</span> <span class="kw">then</span> pun &lt;= pun + <span class="num">1</span>; <span class="kw">end if</span>;
+                x3 &lt;= x2; x2 &lt;= x1; x1 &lt;= x0;   <span class="com">// posmak (shift register)</span>
+                x0 &lt;= <span class="str">"00"</span> &amp; in_port;            <span class="com">// novi uzorak (proširen na 10 bita)</span>
+            <span class="kw">end if</span>;
+            <span class="kw">if</span> read_strobe = <span class="str">'1'</span> <span class="kw">then</span>           <span class="com">// čitanje rezultata (0x20)</span>
+                out_port &lt;= result(<span class="num">9</span> <span class="kw">downto</span> <span class="num">2</span>);  <span class="com">// dijeljenje s 4 = pomak za 2</span>
+            <span class="kw">end if</span>;
+        <span class="kw">end if</span>;
+    <span class="kw">elsif</span> falling_edge(clk) <span class="kw">then</span>
+        <span class="kw">if</span> pun = <span class="str">"100"</span> <span class="kw">then</span> result &lt;= x0 + x1 + x2 + x3; <span class="com">// zbroj 4 uzorka</span>
+        <span class="kw">else</span> result &lt;= (<span class="kw">others</span>=&gt;<span class="str">'0'</span>); <span class="kw">end if</span>;
+    <span class="kw">end if</span>;
+  <span class="kw">end process</span>;
+<span class="kw">end architecture</span>;</code></pre>
+      <div class="expl"><b>Ideja:</b> 4 registra (x0–x3) kao <b>posmačni registar</b> drže zadnja 4 uzorka. Pri svakom upisu
+      najnoviji ulazi u x0, ostali se pomaknu. Suma se računa u 10-bitnoj širini (da ne dođe do prelijevanja:
+      4×255 = 1020 &lt; 1024), a dijeljenje s 4 je samo <b>pomak udesno za 2 bita</b> → <code>result(9 downto 2)</code>.
+      Brojač <code>pun</code> osigurava da rezultat vrijedi tek kad su sva 4 registra napunjena.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ZI 21/22 ============================ -->
+<section class="panel" id="z2022">
+  <div class="intro"><b>ZI / LIR / JIR 21/22</b> — najveća kolekcija. Sadrži konfiguraciju GPIO (conf),
+  zvučnik s N tonova, SysTick + Pause, USART ispis ASCII, te dosta teorije. Ovdje su izdvojeni najvažniji
+  riješeni zadaci; teorijski upućuju na sekciju Teorija.</div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z1</span><span class="pts">4 bod</span><span class="qt">Funkcija conf(int c) — konfiguracija GPIOB ovisno o c</span>
+      <div class="qbody">c=0 ništa; c=1 pinovi 0-7 ulazni; c=2 pinovi 0-7 izlazni (brzi, 2 stanja); inače pinovi 8-11
+      izlazni open-drain + pull-up. Ne dirati pinove koji nisu obuhvaćeni.</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">void</span> <span class="fn">conf</span>(<span class="kw">int</span> c){
+    <span class="kw">if</span>(c == <span class="num">0</span>){
+        <span class="kw">return</span>;                                  <span class="com">// ne radi ništa</span>
+
+    } <span class="kw">else if</span>(c == <span class="num">1</span>){
+        <span class="kw">volatile uint32_t</span> tmp;
+        RCC-&gt;AHB1ENR |= (<span class="num">1UL</span>&lt;&lt;<span class="num">1</span>); tmp = RCC-&gt;AHB1ENR; <span class="com">// takt GPIOB + dummy read</span>
+        GPIOB-&gt;MODER &amp;= <span class="num">0xFFFF0000UL</span>;            <span class="com">// 0-7 -> 00 (ulazni)</span>
+
+    } <span class="kw">else if</span>(c == <span class="num">2</span>){
+        <span class="kw">volatile uint32_t</span> tmp;
+        RCC-&gt;AHB1ENR |= (<span class="num">1UL</span>&lt;&lt;<span class="num">1</span>); tmp = RCC-&gt;AHB1ENR;
+        GPIOB-&gt;MODER  &amp;= <span class="num">0xFFFF0000UL</span>;           <span class="com">// očisti 0-7</span>
+        GPIOB-&gt;MODER  |= <span class="num">0x00005555UL</span>;           <span class="com">// 0-7 -> 01 (izlazni)</span>
+        GPIOB-&gt;OTYPER &amp;= <span class="num">0xFFFFFF00UL</span>;           <span class="com">// 0-7 push-pull (2 stanja)</span>
+        GPIOB-&gt;OSPEEDR |= <span class="num">0x0000FFFFUL</span>;          <span class="com">// 0-7 najveća brzina (11)</span>
+
+    } <span class="kw">else</span> {
+        <span class="kw">volatile uint32_t</span> tmp;
+        RCC-&gt;AHB1ENR |= (<span class="num">1UL</span>&lt;&lt;<span class="num">1</span>); tmp = RCC-&gt;AHB1ENR;
+        GPIOB-&gt;MODER  &amp;= <span class="num">0xFF00FFFFUL</span>;           <span class="com">// očisti 8-11</span>
+        GPIOB-&gt;MODER  |= <span class="num">0x00550000UL</span>;           <span class="com">// 8-11 -> 01 (izlazni)</span>
+        GPIOB-&gt;OTYPER |= ((<span class="num">1</span>&lt;&lt;<span class="num">8</span>)|(<span class="num">1</span>&lt;&lt;<span class="num">9</span>)|(<span class="num">1</span>&lt;&lt;<span class="num">10</span>)|(<span class="num">1</span>&lt;&lt;<span class="num">11</span>)); <span class="com">// open-drain</span>
+        GPIOB-&gt;PUPDR  |= <span class="num">0x00550000UL</span>;           <span class="com">// 8-11 pull-up prema napajanju</span>
+    }
+}</code></pre>
+      <div class="expl"><b>Ključni registri GPIO:</b> <code>MODER</code> (2 bita/pin: 00 ulaz, 01 izlaz, 10 alt, 11 analog),
+      <code>OTYPER</code> (1 bit: 0 push-pull, 1 open-drain), <code>OSPEEDR</code> (2 bita: brzina),
+      <code>PUPDR</code> (2 bita: 01 pull-up, 10 pull-down). <b>Pazi:</b> uvijek prvo <i>očistiti</i> bite maskom
+      (<code>&amp;=</code>), pa postaviti (<code>|=</code>) — jer početno stanje nije poznato, a ostale pinove ne smiješ dirati.</div>
+      <div class="note">Maske: <code>0x5555</code> = svaki drugi par bita = 01 za pinove 0–7 (izlaz). <code>0xFF00FFFF</code>
+      čisti bite 16–23 = MODER za pinove 8–11.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z2</span><span class="pts">5 bod</span><span class="qt">Zvučnik — emitiraj N tonova (N = pročitana 4-bitna vrijednost)</span>
+      <div class="qbody">Čitaj GPIOD0–3, na GPIOE11 emitiraj toliko tonova. scanf/printf + retargeting. Dane init_GPIOD/E, Pause1.</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="com">// retarget.c</span>
+__asm(<span class="str">".global __use_no_semihosting"</span>);
+<span class="kw">int</span> <span class="fn">fputc</span>(<span class="kw">int</span> c, FILE *f){ (<span class="kw">void</span>)f;
+    GPIOE-&gt;ODR |= c;          <span class="com">// pišti (jedan ton)</span>
+    <span class="kw">return</span> c;
+}
+<span class="kw">int</span> <span class="fn">fgetc</span>(FILE *f){ (<span class="kw">void</span>)f;
+    <span class="kw">volatile uint32_t</span> broj = GPIOD-&gt;IDR &amp; <span class="num">0x0000000F</span>; <span class="com">// GPIO 0-3</span>
+    <span class="kw">return</span> broj;
+}
+<span class="kw">int</span> <span class="fn">ferror</span>(FILE *f){ (<span class="kw">void</span>)f; <span class="kw">return</span> <span class="num">0</span>; }
+__attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exit</span>(<span class="kw">int</span> rc){ (<span class="kw">void</span>)rc; <span class="kw">while</span>(<span class="num">1</span>); }</code></pre>
+      <pre><code><span class="com">// main.c</span>
+<span class="kw">extern void</span> <span class="fn">init_GPIOD</span>(<span class="kw">void</span>), <span class="fn">init_GPIOE</span>(<span class="kw">void</span>), <span class="fn">Pause1</span>(<span class="kw">void</span>);
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){
+    <span class="fn">init_GPIOD</span>(); <span class="fn">init_GPIOE</span>();
+    <span class="kw">volatile uint32_t</span> broj;
+    <span class="kw">while</span>(<span class="num">1</span>){
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;broj);
+        <span class="kw">for</span>(<span class="kw">int</span> i = <span class="num">0</span>; i &lt; broj; i++){
+            <span class="fn">printf</span>(<span class="str">"1"</span>);    <span class="com">// jedan ton</span>
+            <span class="fn">Pause1</span>();        <span class="com">// pauza između tonova</span>
+        }
+    }
+}</code></pre>
+      <div class="expl">Broj tonova = pročitana vrijednost → jednostavna <code>for</code> petlja. Svaki <code>printf("1")</code>
+      preko <code>fputc</code> upali zvučnik, a <code>Pause1()</code> daje razmak. (U izvornom rješenju Pause je
+      izostavljen unutar petlje — uredno je dodati ga radi razdvajanja tonova.)</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z3</span><span class="pts">4 bod</span><span class="qt">SysTick 1 ms + Pause() + treperenje diode PD15 (period 2 s)</span>
+      <div class="qbody">AHB prescaler daje f = 42 MHz. SysTick prekid svaki 1 ms uvećava globalni V1.</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">volatile uint32_t</span> V1;
+
+<span class="kw">void</span> <span class="fn">init_SysTick</span>(<span class="kw">void</span>){
+    SCB-&gt;SHP[<span class="num">11</span>] = (<span class="num">0x2UL</span>&lt;&lt;<span class="num">4</span>);                  <span class="com">// prioritet (gornji nibl bajta)</span>
+    SCB-&gt;AIRCR = (SCB-&gt;AIRCR &amp; <span class="num">0xF8FFUL</span>) | <span class="num">0x05FA0000UL</span>; <span class="com">// grupiranje prekida</span>
+    SysTick-&gt;VAL  = <span class="num">0</span>;
+    SysTick-&gt;LOAD = <span class="num">0x1481UL</span>;                     <span class="com">// 42MHz/8=5.25MHz; 5.25e6/1e3=5250 -> 5249 = 0x1481</span>
+    SysTick-&gt;CTRL |= <span class="num">0x3UL</span>;                       <span class="com">// enable brojilo + prekid (izvor takta = AHB/8)</span>
+}
+<span class="kw">void</span> __attribute__((interrupt)) <span class="fn">SysTickHandler</span>(<span class="kw">void</span>){ ++V1; }
+
+<span class="kw">void</span> <span class="fn">Pause</span>(<span class="kw">uint32_t</span> ms){
+    <span class="kw">uint32_t</span> start = V1;
+    <span class="kw">while</span>((V1 - start) &lt; ms);     <span class="com">// busy-wait na milisekundnom brojaču</span>
+}
+
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){
+    <span class="kw">volatile uint32_t</span> tmp;
+    RCC-&gt;AHB1ENR |= (<span class="num">1UL</span>&lt;&lt;<span class="num">3</span>); tmp = RCC-&gt;AHB1ENR; <span class="com">// GPIOD takt</span>
+    GPIOD-&gt;MODER &amp;= ~(<span class="num">3UL</span>&lt;&lt;<span class="num">30</span>);
+    GPIOD-&gt;MODER |=  (<span class="num">1UL</span>&lt;&lt;<span class="num">30</span>);            <span class="com">// PD15 izlaz</span>
+    <span class="fn">init_SysTick</span>();
+    <span class="kw">while</span>(<span class="num">1</span>){
+        GPIOD-&gt;ODR |=  (<span class="num">1UL</span>&lt;&lt;<span class="num">15</span>); <span class="fn">Pause</span>(<span class="num">1000</span>); <span class="com">// upali, čekaj 1 s</span>
+        GPIOD-&gt;ODR &amp;= ~(<span class="num">1UL</span>&lt;&lt;<span class="num">15</span>); <span class="fn">Pause</span>(<span class="num">1000</span>); <span class="com">// ugasi, čekaj 1 s (period 2 s)</span>
+    }
+}</code></pre>
+      <div class="expl"><b>Izračun LOAD:</b> izvor takta SysTick-a je AHB/8 = 42/8 = 5.25 MHz. Za prekid svaki 1 ms treba
+      5.25e6 × 1e-3 = 5250 taktova; LOAD = N−1 = 5249 = <b>0x1481</b>. Period treperenja = 2×1000 ms = 2 s.
+      Funkcija Pause "broji" milisekunde preko V1 koji raste u prekidu.</div>
+      <div class="note">U <b>ZI 2020/21</b> varijanta traži da AHB daje <i>najveću</i> frekvenciju (168 MHz → /8 = 21 MHz →
+      LOAD = 21000−1 = 20999 = 0x5207) i dvije varijable V1 (svaki poziv) i V2 (svaki 10.).</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z4-Z11</span><span class="qt">Teorijski zadaci 21/22 (prefetch, Flash WS, PROM, CPLD, Spartan-3, entity, MUX, registar)</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <ul class="clean">
+        <li><b>Z4</b> Predčitanje / ART → <a href="#" onclick="goT('T10');return false;" style="color:var(--acc)">T10</a></li>
+        <li><b>Z5</b> Flash init i stanja čekanja → <a href="#" onclick="goT('T9');return false;" style="color:var(--acc)">T9</a></li>
+        <li><b>Z6</b> PROM 8/16 → 2⁸·16 = <b>4096 bita</b> → <a href="#" onclick="goT('T1');return false;" style="color:var(--acc)">T1</a></li>
+        <li><b>Z7</b> CPLD blok shema → <a href="#" onclick="goT('T4');return false;" style="color:var(--acc)">T4</a></li>
+        <li><b>Z8</b> Spartan-3 (5 blokova) → <a href="#" onclick="goT('T5');return false;" style="color:var(--acc)">T5</a></li>
+        <li><b>Z9</b> Što je entity → <a href="#" onclick="goT('T15');return false;" style="color:var(--acc)">T15</a></li>
+        <li><b>Z10</b> MUX 4:1 uvjetna logika → vidi ZI 2023 Z8</li>
+        <li><b>Z11</b> 16-bitni registar asinkroni reset → vidi ZI 2023 Z11</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z12</span><span class="pts">5 bod</span><span class="qt">Filter pomičnog prosjeka (Moving Average)</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">Identičan zadatak kao <b>ZI 2023 Z12</b> — vidi tamo za potpuni VHDL kod i objašnjenje.</div></div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">LIR-11</span><span class="qt">USART2 — ispiši cijelu 8-bitnu ASCII tablicu (printf + semihost)</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="com">// retarget.c — preko USART2</span>
+<span class="kw">#include</span> &lt;stdio.h&gt;
+<span class="kw">#include</span> &lt;rt_sys.h&gt;
+<span class="kw">extern void</span> <span class="fn">sendchar_USART2</span>(<span class="kw">int</span>);
+__asm(<span class="str">".global __use_no_semihosting"</span>);
+<span class="kw">#define</span> FH_STDIN  <span class="num">0x8001</span>
+<span class="kw">#define</span> FH_STDOUT <span class="num">0x8002</span>
+<span class="kw">#define</span> FH_STDERR <span class="num">0x8003</span>
+
+FILEHANDLE <span class="fn">_sys_open</span>(<span class="kw">const char</span> *name, <span class="kw">int</span> openmode){
+    (<span class="kw">void</span>)openmode;
+    <span class="kw">if</span>(!strncmp(name,<span class="str">":STDIN"</span>,<span class="num">6</span>))  <span class="kw">return</span> FH_STDIN;
+    <span class="kw">if</span>(!strncmp(name,<span class="str">":STDOUT"</span>,<span class="num">7</span>)) <span class="kw">return</span> FH_STDOUT;
+    <span class="kw">if</span>(!strncmp(name,<span class="str">":STDERR"</span>,<span class="num">7</span>)) <span class="kw">return</span> FH_STDERR;
+    <span class="kw">return</span> -<span class="num">1</span>;
+}
+<span class="kw">int</span> <span class="fn">_sys_istty</span>(FILEHANDLE fh){ <span class="kw">return</span> <span class="num">1</span>; }
+<span class="kw">int</span> <span class="fn">_sys_write</span>(FILEHANDLE fh, <span class="kw">const unsigned char</span> *buf, <span class="kw">unsigned</span> len, <span class="kw">int</span> mode){
+    (<span class="kw">void</span>)mode;
+    <span class="kw">if</span>(fh == FH_STDOUT){
+        <span class="kw">while</span>(len--){ <span class="fn">sendchar_USART2</span>(*buf++); }
+        <span class="kw">return</span> <span class="num">0</span>;
+    }
+    <span class="kw">return</span> -<span class="num">1</span>;
+}
+__attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exit</span>(<span class="kw">int</span> rc){ (<span class="kw">void</span>)rc; <span class="kw">while</span>(<span class="num">1</span>); }</code></pre>
+      <pre><code><span class="com">// main.c</span>
+<span class="kw">extern void</span> <span class="fn">init_USART2</span>(<span class="kw">void</span>);
+<span class="kw">void</span> <span class="fn">sendchar_USART2</span>(<span class="kw">int32_t</span> c){
+    <span class="kw">while</span>(!(USART2-&gt;SR &amp; <span class="num">0x0080</span>));   <span class="com">// čekaj TXE (bit 7) = spreman za slanje</span>
+    USART2-&gt;DR = (c &amp; <span class="num">0xFF</span>);        <span class="com">// upiši znak u podatkovni registar</span>
+}
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){
+    <span class="fn">init_USART2</span>();
+    <span class="kw">for</span>(<span class="kw">int</span> i = <span class="num">0</span>; i &lt; <span class="num">128</span>; i++)   <span class="com">// (8-bitni ASCII: do 256 ako treba)</span>
+        <span class="fn">printf</span>(<span class="str">"%c \n"</span>, i);
+    <span class="kw">return</span> <span class="num">0</span>;
+}</code></pre>
+      <div class="expl"><b>USART slanje:</b> upiši znak u <code>USART2_DR</code>; prijenos je gotov kad se postavi bit 7
+      (TXE/TC) u <code>USART2_SR</code>; bit se automatski briše upisom novog podatka. "Neposredni semihosting"
+      ovdje znači preusmjeravanje preko <code>_sys_write</code> umjesto <code>fputc</code>.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">LIR-14</span><span class="qt">RC oscilator (Schmitt) · LIR-10 SPI · ostali teorijski</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <ul class="clean">
+        <li><b>RC oscilator</b> → <a href="#" onclick="goT('T8');return false;" style="color:var(--acc)">T8</a></li>
+        <li><b>SPI master + 3 slavea</b> → <a href="#" onclick="goT('T15');return false;" style="color:var(--acc)">T15 (na dnu)</a></li>
+        <li><b>Boot loader</b> → <a href="#" onclick="goT('T13');return false;" style="color:var(--acc)">T13</a></li>
+        <li><b>Porodice PLD</b> (PROM, PAL, PLA, GAL, CPLD, FPGA) → <a href="#" onclick="goT('T3');return false;" style="color:var(--acc)">T3</a></li>
+        <li><b>PicoBlaze arhitektura</b> (RISC, Harvard, 8-bit) → <a href="#" onclick="goT('T6');return false;" style="color:var(--acc)">T6</a></li>
+        <li><b>EXTI prekid (LIR-12, GPIOD3 → pravokutni 2 Hz na B14)</b> → ista logika kao ZI 2024 Z2; u handleru toggle PB14.</li>
+        <li><b>16-bitno brojilo asinkroni reset (LIR-21)</b> → kao ZI 2021 Z7 (bez VALUE/ENABLE/UP_DOWN).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">JIR-10</span><span class="qt">Čitaj GPIOD0–7, ispiši na GPIOD8–15 (parno +1, neparno isto)</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="com">// retarget.c</span>
+<span class="kw">int</span> <span class="fn">fputc</span>(<span class="kw">int</span> c, FILE *f){ (<span class="kw">void</span>)f;
+    GPIOD-&gt;ODR &amp;= <span class="num">0x000000FF</span>;      <span class="com">// očisti bite 8-15</span>
+    GPIOD-&gt;ODR |= (c &lt;&lt; <span class="num">8</span>);          <span class="com">// ispiši na GPIOD8-15</span>
+    <span class="kw">return</span> c;
+}
+<span class="kw">int</span> <span class="fn">fgetc</span>(FILE *f){ (<span class="kw">void</span>)f;
+    <span class="kw">return</span> (GPIOD-&gt;IDR &amp; <span class="num">0x000000FF</span>);  <span class="com">// GPIOD0-7</span>
+}</code></pre>
+      <pre><code><span class="com">// main.c</span>
+<span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){
+    <span class="fn">init_GPIOD</span>();
+    <span class="kw">volatile uint32_t</span> c;
+    <span class="kw">while</span>(<span class="num">1</span>){
+        <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;c);
+        <span class="kw">if</span>(c % <span class="num">2</span> == <span class="num">0</span>) c++;   <span class="com">// parno -> +1</span>
+        <span class="fn">printf</span>(<span class="str">"%c"</span>, c);        <span class="com">// neparno ostaje isto</span>
+    }
+}</code></pre>
+      <div class="expl">Najčešći "uvodni" zadatak — javlja se u JIR 21/22, ZI 20/21 i drugim. Ulaz na nižem bajtu,
+      izlaz na višem bajtu istog porta (zato pomak <code>&lt;&lt; 8</code>).</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ZI 2021 ============================ -->
+<section class="panel" id="z2021">
+  <div class="intro"><b>URS ZI 2021</b> — 8 zadataka. conf(), parno/neparno program, SysTick s V1/V2,
+  RC oscilator, boundary-scan, PicoBlaze arhitektura, 16-bit brojač (VALUE/ENABLE/UP_DOWN), top-level PicoBlaze sustav.</div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z1</span><span class="qt">Funkcija conf(int c) — konfiguracija GPIOB</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">Identično kao <b>ZI 21/22 Z1</b> — vidi tamo za potpuni kod i objašnjenje GPIO registara.</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z2</span><span class="qt">GPIOD0–7 → GPIOD8–15 (parno +1, neparno isto)</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">Identično kao <b>JIR 21/22 Z10</b> — vidi tab "ZI 21/22".</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z3</span><span class="qt">SysTick 1 ms, V1 (svaki poziv) + V2 (svaki 10.)</span>
+      <div class="qbody">AHB daje najvišu dopuštenu frekvenciju (168 MHz).</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">static int</span> brojac = <span class="num">0</span>;
+
+<span class="kw">void</span> <span class="fn">init_SysTick</span>(<span class="kw">void</span>){
+    SCB-&gt;SHP[<span class="num">11</span>] = (<span class="num">0x2UL</span>&lt;&lt;<span class="num">4</span>);
+    SCB-&gt;AIRCR = (SCB-&gt;AIRCR &amp; <span class="num">0xF8FFUL</span>) | <span class="num">0x05FA0000UL</span>;
+    SysTick-&gt;VAL  = <span class="num">0</span>;
+    SysTick-&gt;LOAD = <span class="num">0x5207UL</span>;   <span class="com">// 168MHz/8=21MHz; 21e6/1e3=21000 -> 20999 = 0x5207</span>
+    SysTick-&gt;CTRL |= <span class="num">0x3UL</span>;
+}
+<span class="kw">void</span> __attribute__((interrupt)) <span class="fn">SysTickHandler</span>(<span class="kw">void</span>){
+    <span class="kw">volatile uint32_t</span> V1, V2;
+    ++V1;
+    ++brojac;
+    <span class="kw">if</span>(brojac == <span class="num">10</span>){ ++V2; brojac = <span class="num">0</span>; }  <span class="com">// V2 svaki 10. poziv</span>
+}</code></pre>
+      <div class="expl">Ista struktura kao ZI 21/22 Z3, ali AHB = 168 MHz (najviše dopušteno) → LOAD = 0x5207, i dvije
+      varijable. Brojač u handleru broji do 10 za V2.</div>
+    </div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z4</span><span class="qt">RC oscilator (Schmitt)</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">Vidi <a href="#" onclick="goT('T8');return false;" style="color:var(--acc)">Teorija T8</a>.</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z5</span><span class="qt">Boundary-scan arhitektura</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">Vidi <a href="#" onclick="goT('T14');return false;" style="color:var(--acc)">Teorija T14</a>.</div></div>
+  </div>
+  <div class="task">
+    <div class="q"><span class="badge">Z6</span><span class="qt">Arhitektura PicoBlaze</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol"><div class="expl">Vidi <a href="#" onclick="goT('T6');return false;" style="color:var(--acc)">Teorija T6</a>.</div></div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z7</span><span class="qt">VHDL 16-bit brojač — UP_DOWN, VALUE (4 bit), ENABLE, asinkroni reset</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="kw">library</span> IEEE;
+<span class="kw">use</span> IEEE.std_logic_1164.<span class="kw">all</span>;
+<span class="kw">use</span> IEEE.std_logic_unsigned.<span class="kw">all</span>;
+
+<span class="kw">entity</span> counter <span class="kw">is</span> <span class="kw">port</span>(
+    output:  <span class="kw">out</span> std_logic_vector(<span class="num">15</span> <span class="kw">downto</span> <span class="num">0</span>);
+    up_down: <span class="kw">in</span>  std_logic;                          <span class="com">// 1 = naprijed, 0 = natrag</span>
+    value:   <span class="kw">in</span>  std_logic_vector(<span class="num">3</span> <span class="kw">downto</span> <span class="num">0</span>);     <span class="com">// korak</span>
+    enable:  <span class="kw">in</span>  std_logic;
+    rst:     <span class="kw">in</span>  std_logic;
+    clk:     <span class="kw">in</span>  std_logic);
+<span class="kw">end</span> counter;
+
+<span class="kw">architecture</span> counter_arh <span class="kw">of</span> counter <span class="kw">is</span>
+    <span class="kw">signal</span> cnt: std_logic_vector(<span class="num">15</span> <span class="kw">downto</span> <span class="num">0</span>);
+<span class="kw">begin</span>
+    <span class="kw">process</span>(clk, rst)
+    <span class="kw">begin</span>
+        <span class="kw">if</span> rst = <span class="str">'1'</span> <span class="kw">then</span>                     <span class="com">// asinkroni reset</span>
+            cnt &lt;= (<span class="kw">others</span> =&gt; <span class="str">'0'</span>);
+        <span class="kw">elsif</span> rising_edge(clk) <span class="kw">then</span>
+            <span class="kw">if</span> enable = <span class="str">'1'</span> <span class="kw">then</span>
+                <span class="kw">if</span> up_down = <span class="str">'1'</span> <span class="kw">then</span>
+                    cnt &lt;= cnt + (<span class="str">"000000000000"</span> &amp; value); <span class="com">// uvećaj za VALUE</span>
+                <span class="kw">else</span>
+                    cnt &lt;= cnt - (<span class="str">"000000000000"</span> &amp; value); <span class="com">// smanji za VALUE</span>
+                <span class="kw">end if</span>;
+            <span class="kw">end if</span>;
+        <span class="kw">end if</span>;
+    <span class="kw">end process</span>;
+    output &lt;= cnt;
+<span class="kw">end</span> counter_arh;</code></pre>
+      <div class="note"><b>Ispravak u odnosu na rješenje s ispita:</b> brojač treba biti <b>signal</b> (ne variable),
+      koristiti <code>&lt;=</code> (ne <code>=</code>), a VALUE (4 bita) treba proširiti na 16 bita prije zbrajanja
+      (<code>"0…0" &amp; value</code>). Asinkroni reset jer je <code>rst</code> u listi osjetljivosti i provjerava se prvi.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Z8</span><span class="pts">složeni</span><span class="qt">PicoBlaze sustav — 2 ulazne (VJ1 0x20, VJ2 0x40) + 1 izlazna (VJ3 0x60) + prekid</span>
+      <div class="qbody">Na 1. prekid čitaj VJ1, na 2. VJ2, na 3. pošalji na VJ3 (ciklus). Ako je VJ1 paran → VJ2 nepromijenjen na VJ3;
+      ako neparan → negirana vrijednost VJ2.</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <h4 class="sh">PicoBlaze asemblerski program</h4>
+      <pre><code>        ADDRESS  <span class="num">000</span>
+        CONSTANT VJ1,     <span class="num">0x20</span>
+        CONSTANT VJ2,     <span class="num">0x40</span>
+        CONSTANT VJ3,     <span class="num">0x60</span>
+        CONSTANT TIPKALO, <span class="num">0x21</span>
+
+        LOAD    s0, <span class="num">00</span>          <span class="com">; s0 = brojač faze (0,1,2)</span>
+PETLJA: LOAD    s1, TIPKALO     <span class="com">; čekaj signal tipkala (debounce/edge)</span>
+        COMPARE s1, <span class="num">01</span>
+        JUMP    NZ, PETLJA
+        ADD     s0, <span class="num">01</span>          <span class="com">; nova faza</span>
+
+SIGNAL1: COMPARE s0, <span class="num">01</span>
+         JUMP   NZ, SIGNAL2
+         INPUT  s2, VJ1         <span class="com">; faza 1: čitaj VJ1 u s2</span>
+         JUMP   PETLJA
+SIGNAL2: COMPARE s0, <span class="num">02</span>
+         JUMP   NZ, SIGNAL3
+         INPUT  s3, VJ2         <span class="com">; faza 2: čitaj VJ2 u s3</span>
+         JUMP   PETLJA
+SIGNAL3: SR0    s2              <span class="com">; pomak udesno: najniži bit -> Carry</span>
+         JUMP   NC, PARAN       <span class="com">; ako Carry=0 -> VJ1 paran</span>
+         XOR    s3, FF          <span class="com">; neparan -> negiraj VJ2</span>
+PARAN:   OUTPUT s3, VJ3         <span class="com">; pošalji rezultat na VJ3</span>
+         LOAD   s0, <span class="num">00</span>          <span class="com">; resetiraj fazu</span>
+         JUMP   PETLJA</code></pre>
+      <h4 class="sh">VHDL — top-level + proces ulaznih VJ</h4>
+      <pre><code><span class="kw">entity</span> top_level <span class="kw">is</span> <span class="kw">port</span>(
+    data_vj1: <span class="kw">in</span>  std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);
+    data_vj2: <span class="kw">in</span>  std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);
+    data_vj3: <span class="kw">out</span> std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);
+    tipkalo:  <span class="kw">in</span>  std_logic;
+    clk:      <span class="kw">in</span>  std_logic);
+<span class="kw">end</span> top_level;
+
+<span class="kw">architecture</span> bhv <span class="kw">of</span> top_level <span class="kw">is</span>
+    <span class="com">-- component kcpsm3 i prog_rom (prepisati iz zadatka)</span>
+    <span class="com">-- signali: address, instruction, port_id, in_port, out_port,</span>
+    <span class="com">--          write_strobe, read_strobe, interrupt, interrupt_ack, reset</span>
+<span class="kw">begin</span>
+    processor: kcpsm3 <span class="kw">port map</span>( ... );   <span class="com">-- mapiranje signala</span>
+    program:   prog_rom <span class="kw">port map</span>( ... );
+
+    ulazne_vj: <span class="kw">process</span>(clk)
+    <span class="kw">begin</span>
+        <span class="kw">if</span> rising_edge(clk) <span class="kw">then</span>
+            <span class="kw">if</span>    port_id = <span class="str">"00100000"</span> <span class="kw">then</span> in_port &lt;= data_vj1; <span class="com">-- 0x20</span>
+            <span class="kw">elsif</span> port_id = <span class="str">"01000000"</span> <span class="kw">then</span> in_port &lt;= data_vj2; <span class="com">-- 0x40</span>
+            <span class="kw">elsif</span> port_id = <span class="str">"00100001"</span> <span class="kw">then</span> in_port &lt;= (<span class="num">0</span>=&gt;tipkalo, <span class="kw">others</span>=&gt;<span class="str">'0'</span>); <span class="com">-- 0x21</span>
+            <span class="kw">end if</span>;
+        <span class="kw">end if</span>;
+    <span class="kw">end process</span>;
+
+    izlazna_vj: <span class="kw">process</span>(clk)
+    <span class="kw">begin</span>
+        <span class="kw">if</span> rising_edge(clk) <span class="kw">then</span>
+            <span class="kw">if</span> write_strobe = <span class="str">'1'</span> <span class="kw">and</span> port_id = <span class="str">"01100000"</span> <span class="kw">then</span> <span class="com">-- 0x60</span>
+                data_vj3 &lt;= out_port;
+            <span class="kw">end if</span>;
+        <span class="kw">end if</span>;
+    <span class="kw">end process</span>;
+<span class="kw">end</span> bhv;</code></pre>
+      <div class="expl"><b>Kako radi ispitivanje parnosti:</b> instrukcija <code>SR0 s2</code> (shift right, ulazi 0) izbaci
+      najniži bit u <b>Carry</b>. Ako je broj paran → LSB=0 → C=0 → skok na PARAN (šalji nepromijenjeno). Ako je
+      neparan → C=1 → <code>XOR s3, FF</code> negira sve bitove VJ2.
+      <br><b>Faze:</b> brojač s0 prati koji je po redu prekid (1=čitaj VJ1, 2=čitaj VJ2, 3=obradi i pošalji).</div>
+      <div class="note"><b>Adresno dekodiranje:</b> 0x20="00100000", 0x40="01000000", 0x60="01100000",
+      0x21="00100001". <code>port_id</code> bira jedinicu, <code>write_strobe</code> potvrđuje upis (OUTPUT),
+      <code>read_strobe</code>/INPUT čitanje.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ ZI 20/21 + Dodatni ============================ -->
+<section class="panel" id="z2020">
+  <div class="intro"><b>ZI 20/21 i Dodatni zadaci</b> — uglavnom PicoBlaze sustavi (paritet, množenje,
+  LCD ispis, debouncing, ScratchPad brojači). Najvažniji obrasci su riješeni; ponavljaju se kroz Dodatne 1–16.</div>
+
+  <div class="task">
+    <div class="q"><span class="badge">D-PAR</span><span class="qt">PicoBlaze — prekid, ispitaj paritet, pošalji na 0x40 (paran) ili 0x60 (neparan)</span>
+      <div class="qbody">1 ulazna VJ (0x80), 2 izlazne (0x40, 0x60). Na svaki prekid čitaj i ispitaj paritet. (Dodatni 8/9/14, LJIR-17)</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code>        ADDRESS  <span class="num">000</span>
+        CONSTANT PORT_ID1, <span class="num">80</span>   <span class="com">; ulazna</span>
+        CONSTANT PORT_ID2, <span class="num">60</span>   <span class="com">; parni</span>
+        CONSTANT PORT_ID3, <span class="num">40</span>   <span class="com">; neparni</span>
+
+        ENABLE INTERRUPT
+CEKAJ:  JUMP CEKAJ
+PREKID: INPUT  s0, PORT_ID1   <span class="com">; pročitaj podatak</span>
+        TEST   s0, FF         <span class="com">; AND sa svim 1 -> C = paritet (1 ako neparan br. jedinica)</span>
+        JUMP   C, NEPARAN
+PARAN:  OUTPUT s0, PORT_ID2   <span class="com">; paran -> 0x60</span>
+        RETURNI
+NEPARAN: OUTPUT s0, PORT_ID3  <span class="com">; neparan -> 0x40</span>
+        RETURNI
+        ; prekidna adresa
+        ADDRESS <span class="num">3FF</span>
+        JUMP PREKID</code></pre>
+      <div class="expl"><b>TEST instrukcija</b> radi AND nad operandima i postavlja zastavice <i>bez spremanja rezultata</i>.
+      Zastavica <b>C</b> kod TEST-a daje <b>paritet</b>: C=1 ako je broj jedinica neparan. Tako jednom instrukcijom
+      ispitamo paritet cijelog bajta.</div>
+      <div class="note">VHDL: ulazni proces mapira <code>port_id="10000000"</code> (0x80) → in_port, izlazni proces
+      dekodira 0x60 i 0x40 uz <code>write_strobe</code>. Prekidni sustav: poseban proces drži <code>interrupt</code>
+      dok ga <code>interrupt_ack</code> ne potvrdi.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">D-SP</span><span class="qt">PicoBlaze — brojači parnih/neparnih u ScratchPad (adrese 0x10 i 0x11)</span>
+      <div class="qbody">Na svaki prekid čitaj IN_PORT, ispitaj parnost; paran → uvećaj brojač na SP[0x10], neparan → SP[0x11]. (Dodatni 12/15)</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code>        ADDRESS  <span class="num">000</span>
+        CONSTANT IN_PORT, <span class="num">00</span>
+        ENABLE INTERRUPT
+BROJACI: LOAD s1, <span class="num">00</span>          <span class="com">; inicijaliziraj brojače</span>
+         LOAD s2, <span class="num">00</span>
+CEKAJ:  JUMP CEKAJ
+PREKID: INPUT  s0, IN_PORT    <span class="com">; pročitaj podatak</span>
+        AND    s0, <span class="num">01</span>         <span class="com">; maskiraj najniži bit (parnost vrijednosti)</span>
+        JUMP   Z, PARAN        <span class="com">; LSB=0 -> paran</span>
+        ADD    s1, <span class="num">01</span>         <span class="com">; neparan -> uvećaj s1</span>
+        STORE  s1, <span class="num">11</span>         <span class="com">; SP[0x11] = brojač neparnih</span>
+        RETURNI
+PARAN:  ADD    s2, <span class="num">01</span>         <span class="com">; paran -> uvećaj s2</span>
+        STORE  s2, <span class="num">10</span>         <span class="com">; SP[0x10] = brojač parnih</span>
+        RETURNI
+        ADDRESS <span class="num">3FF</span>
+        JUMP PREKID</code></pre>
+      <div class="expl"><b>ScratchPad</b> je mala interna RAM memorija PicoBlaze-a; <code>STORE sX, adr</code> upisuje,
+      <code>FETCH sX, adr</code> čita. Ovdje <code>AND s0, 01</code> + <code>JUMP Z</code> testira <i>vrijednost</i>
+      parnosti (LSB), za razliku od TEST koji bi dao <i>paritet broja jedinica</i>.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">D-LCD</span><span class="qt">PicoBlaze — predznak na LCD ("NEG"/"POZ") + apsolutna vrijednost na VJ2</span>
+      <div class="qbody">VJ1 (0x80) čita 8-bitni 2'k podatak. Negativan → LCD "NEG", inače "POZ". |x| → VJ2 (0x40). LCD = 0x60. (Dodatni 5/13)</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code>        CONSTANT VJ1, <span class="num">80</span>
+        CONSTANT VJ2, <span class="num">40</span>
+        CONSTANT LCD, <span class="num">60</span>
+        CONSTANT chr_P, <span class="num">50</span>   CONSTANT chr_O, <span class="num">4F</span>
+        CONSTANT chr_Z, <span class="num">5A</span>   CONSTANT chr_N, <span class="num">4E</span>
+        CONSTANT chr_E, <span class="num">45</span>   CONSTANT chr_G, <span class="num">47</span>
+        CONSTANT clrdisp, <span class="num">01</span>
+
+        ENABLE INTERRUPT
+PREKID: INPUT  s0, VJ1
+        LOAD   s1, <span class="num">80</span>
+        AND    s1, s0          <span class="com">; testiraj bit 7 (predznak 2'k)</span>
+        JUMP   Z, POZ          <span class="com">; bit7=0 -> pozitivan/nula</span>
+NEG:    LOAD   s2, clrdisp     OUTPUT s2, LCD   <span class="com">; obriši LCD</span>
+        LOAD   s2, chr_N       OUTPUT s2, LCD
+        LOAD   s2, chr_E       OUTPUT s2, LCD
+        LOAD   s2, chr_G       OUTPUT s2, LCD
+        SUB    s0, <span class="num">01</span>         <span class="com">; 2'k -> |x|: oduzmi 1 ...</span>
+        XOR    s0, FF          <span class="com">; ... i invertiraj sve bitove</span>
+        OUTPUT s0, VJ2
+        RETURNI
+POZ:    LOAD   s2, clrdisp     OUTPUT s2, LCD
+        LOAD   s2, chr_P       OUTPUT s2, LCD
+        LOAD   s2, chr_O       OUTPUT s2, LCD
+        LOAD   s2, chr_Z       OUTPUT s2, LCD
+        OUTPUT s0, VJ2         <span class="com">; pozitivan -> šalji nepromijenjeno</span>
+        RETURNI
+        ADDRESS <span class="num">3FF</span>
+        JUMP PREKID</code></pre>
+      <div class="expl"><b>Predznak u 2'k:</b> bit 7 = 1 znači negativan. <b>Apsolutna vrijednost</b> negativnog 2'k broja:
+      oduzmi 1 pa invertiraj (ili invertiraj pa dodaj 1). LCD znakovi se šalju kao ASCII kodovi (npr. 'N'=0x4E),
+      uz prethodni <code>clrdisp</code> (0x01) za brisanje ekrana.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">D-MUL</span><span class="qt">PicoBlaze — množenje uzastopnim zbrajanjem, viših 8 bita na VJ3</span>
+      <div class="qbody">VJ1·VJ2 (8-bit NBC), rezultat 16-bit u dva registra; na VJ3 viših 8 bita. (Dodatni 4)</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code>        ENABLE INTERRUPT
+PREKID: INPUT  s1, VJ1         <span class="com">; množenik</span>
+        INPUT  s2, VJ2         <span class="com">; množitelj (brojač zbrajanja)</span>
+        LOAD   s3, <span class="num">00</span>         <span class="com">; niži bajt rezultata</span>
+        LOAD   s4, <span class="num">00</span>         <span class="com">; viši bajt rezultata</span>
+PETLJA: COMPARE s2, <span class="num">00</span>
+        JUMP   Z, GOTOVO
+        ADD    s3, s1          <span class="com">; rezultat += množenik</span>
+        ADDCY  s4, <span class="num">00</span>         <span class="com">; prenesi Carry u viši bajt</span>
+        SUB    s2, <span class="num">01</span>         <span class="com">; smanji brojač</span>
+        JUMP   PETLJA
+GOTOVO: OUTPUT s4, VJ3         <span class="com">; pošalji viših 8 bita</span>
+        RETURNI</code></pre>
+      <div class="expl"><b>Množenje uzastopnim zbrajanjem:</b> a·b = zbroji a <i>b puta</i>. Rezultat je 16-bitni pa
+      koristimo dva registra: <code>ADD s3, s1</code> zbraja niži bajt, a <code>ADDCY s4, 00</code> dodaje eventualni
+      prijenos (Carry) u viši bajt. Na kraju šaljemo samo viši bajt (s4).</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">D-OUT</span><span class="qt">VHDL — proces za izlazne vanjske jedinice na PicoBlaze (+ assembler primjer)</span>
+      <div class="qbody">Dodatni 16 / 15 — spajanje izlaznih VJ na KCPSM3.</div>
+    </div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code>output_ports: <span class="kw">process</span>(clk)
+<span class="kw">begin</span>
+    <span class="kw">if</span> rising_edge(clk) <span class="kw">then</span>
+        <span class="kw">if</span> write_strobe = <span class="str">'1'</span> <span class="kw">then</span>
+            <span class="kw">if</span> port_id(<span class="num">7</span>) = <span class="str">'1'</span> <span class="kw">then</span>   <span class="com">-- adresa 0x80 -> LED registar</span>
+                led &lt;= out_port;
+            <span class="kw">end if</span>;
+        <span class="kw">end if</span>;
+    <span class="kw">end if</span>;
+<span class="kw">end process</span> output_ports;</code></pre>
+      <pre><code><span class="com">; primjer korištenja u assembleru</span>
+CONSTANT LED_PORT, <span class="num">40</span>
+    LOAD   s0, <span class="num">08</span>
+    OUTPUT s0, LED_PORT</code></pre>
+      <div class="expl"><b>Princip:</b> <code>port_id</code> selektira sklop, <code>write_strobe</code> potvrđuje upis,
+      <code>out_port</code> je 8-bitna sabirnica podataka. Izlazni registar (D-flip-flop s CE) preuzme podatak
+      kad su uvjeti zadovoljeni. Do 8 izlaznih jedinica može se dekodirati po jednom bitu port_id-a.</div>
+      <div class="note"><b>Diskretni / Hard-core / Soft-core procesori:</b> diskretni = gotov ASIC čip
+      (najveći izbor, najbrži); hard-core = procesor ugrađen u FPGA kao namjenski blok (brz, ali rijetki FPGA-ovi);
+      soft-core (PicoBlaze) = u potpunosti izveden u logici FPGA (sporiji, ali fleksibilan, dobar za GPIO kontrolu).</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">D-DEB</span><span class="qt">PicoBlaze — debouncing tipkala</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <pre><code><span class="com">; pretpostavka: postoji potprogram cekaj1ms</span>
+DEBOUNCE: INPUT  s0, TIPKALO   <span class="com">; pročitaj stanje tipkala</span>
+          AND    s0, <span class="num">01</span>       <span class="com">; izoliraj bit tipkala</span>
+          JUMP   Z, DEBOUNCE    <span class="com">; ako nije pritisnuto -> ponovo</span>
+          CALL   cekaj1ms       <span class="com">; pričekaj da prođe titranje kontakata</span>
+          INPUT  s0, TIPKALO    <span class="com">; ponovno pročitaj</span>
+          AND    s0, <span class="num">01</span>
+          JUMP   Z, DEBOUNCE    <span class="com">; ako više nije pritisnuto -> bio šum</span>
+          ; ovdje je tipkalo stvarno pritisnuto</code></pre>
+      <div class="expl"><b>Debouncing</b> uklanja lažne prijelaze zbog mehaničkog titranja kontakata. Pročita se stanje,
+      pričeka ~1 ms (dok titranje ne prestane), pa se <i>ponovno</i> pročita. Tek ako je tipkalo i dalje pritisnuto,
+      smatra se valjanim pritiskom.</div>
+    </div>
+  </div>
+
+  <div class="task">
+    <div class="q"><span class="badge">Misc</span><span class="qt">Ostali zadaci 20/21 (conf, parno/neparno, RC osc., boundary-scan, brojač, top-level)</span></div>
+    <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
+    <div class="sol">
+      <ul class="clean">
+        <li><b>Z1 conf(int c)</b> → kao ZI 21/22 Z1</li>
+        <li><b>Z2 parno/neparno</b> → kao JIR 21/22 Z10 (varijanta s GPIOA)</li>
+        <li><b>Z3 SysTick V1/V2</b> → ZI 2021 Z3</li>
+        <li><b>Z4 RC oscilator</b> → <a href="#" onclick="goT('T8');return false;" style="color:var(--acc)">T8</a></li>
+        <li><b>Z5 boundary-scan</b> → <a href="#" onclick="goT('T14');return false;" style="color:var(--acc)">T14</a></li>
+        <li><b>Z6 PicoBlaze arhitektura</b> → <a href="#" onclick="goT('T6');return false;" style="color:var(--acc)">T6</a></li>
+        <li><b>Z7 brojač (10/16-bit, VALUE/ENABLE/UP_DOWN)</b> → ZI 2021 Z7</li>
+        <li><b>Z8 top-level PicoBlaze sustav</b> → ZI 2021 Z8 (faze + paritet)</li>
+        <li><b>Dodatni 6</b> blok-shema 5 ulaznih VJ + VHDL + ASM čitanje</li>
+        <li><b>Dodatni 1/2/3/10/11</b> = varijacije top-level sustava (prekid ili tipkalo kao okidač)</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<a class="up" href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">↑</a>
+
+<footer>
+  URS — Ugradbeni računalni sustavi · skripta za Završni ispit · izrađeno iz riješenih ispita 2021–2024.<br>
+  Rješenja su studentska + dorađena objašnjenja; <b>provjeri kritične detalje</b> (maske, brojeve WS, LOAD vrijednosti) prije ispita.
+</footer>
+
+<script>
+  // Tabs
+  const tabs = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  tabs.forEach(t=>t.addEventListener('click',()=>{
+    tabs.forEach(x=>x.classList.remove('active'));
+    panels.forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.p).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+
+  // Toggle solutions
+  document.querySelectorAll('.toggle').forEach(tg=>{
+    tg.addEventListener('click',()=>{
+      tg.classList.toggle('open');
+      tg.nextElementSibling.classList.toggle('open');
+    });
+  });
+  function allSol(open){
+    const panel = document.querySelector('.panel.active');
+    panel.querySelectorAll('.toggle').forEach(tg=>{
+      const sol = tg.nextElementSibling;
+      tg.classList.toggle('open', open);
+      sol.classList.toggle('open', open);
+    });
+  }
+  // Jump to theory task by badge text
+  function goT(id){
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
+    document.querySelector('.tab[data-p="t"]').classList.add('active');
+    const t = document.getElementById('t');
+    t.classList.add('active');
+    // find badge
+    const badges = t.querySelectorAll('.badge');
+    for(const b of badges){
+      if(b.textContent.trim()===id){
+        const task = b.closest('.task');
+        const tg = task.querySelector('.toggle');
+        tg.classList.add('open');
+        tg.nextElementSibling.classList.add('open');
+        task.scrollIntoView({behavior:'smooth',block:'center'});
+        task.style.transition='box-shadow .3s';
+        task.style.boxShadow='0 0 0 2px var(--acc)';
+        setTimeout(()=>task.style.boxShadow='',1400);
+        break;
+      }
+    }
+  }
+</script>
+</body>
+</html>
