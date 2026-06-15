@@ -83,6 +83,9 @@
   .diagram{background:var(--code-bg);border:1px solid var(--line);border-radius:9px;
     padding:14px;margin:10px 0;font-family:"JetBrains Mono",monospace;font-size:.8rem;
     white-space:pre;overflow-x:auto;color:#a8c5e8;line-height:1.35}
+  .schema{display:block;max-width:100%;height:auto;margin:14px auto;background:#fff;
+    border:1px solid var(--line);border-radius:9px;padding:12px;
+    box-shadow:0 2px 10px rgba(0,0,0,.25)}
 
   .controls{display:flex;gap:10px;justify-content:flex-end;margin-bottom:14px;flex-wrap:wrap}
   .btn{background:var(--card);border:1px solid var(--line);color:var(--mut);padding:6px 13px;
@@ -186,20 +189,7 @@
     <div class="q"><span class="badge">T4</span><span class="qt">Blok shema CPLD sklopa</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram">┌──────┐                                  ┌──────┐
-│ I/O  │   ┌───────────┐  ┌───────────┐   │ I/O  │
-│block │──▶│ PAL-like  │  │ PAL-like  │◀──│block │
-└──────┘   │  block    │  │  block    │   └──────┘
-   ▲       └─────┬─────┘  └─────┬─────┘      ▲
-   │             ▼               ▼            │
-   │        ┌──────────────────────────┐     │
-   │◀──────▶│   Interconnection matrix │◀────▶│
-   │        └──────────────────────────┘     │
-   ▼             ▲               ▲            ▼
-┌──────┐   ┌─────┴─────┐  ┌─────┴─────┐   ┌──────┐
-│ I/O  │──▶│ PAL-like  │  │ PAL-like  │◀──│ I/O  │
-│block │   │  block    │  │  block    │   │block │
-└──────┘   └───────────┘  └───────────┘   └──────┘</div>
+      <img class="schema" src="img/cpld.png" alt="CPLD blok shema" loading="lazy">
       <div class="expl">CPLD = više <b>PAL-like blokova</b> povezanih programabilnom
       <b>interconnect</b> matricom, s <b>I/O blokovima</b> na rubovima. Predvidljiviji timing
       od FPGA jer su putevi kroz centralnu matricu fiksne duljine.</div>
@@ -246,14 +236,7 @@
     <div class="q"><span class="badge">T7</span><span class="qt">Princip rada PLL sklopa</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram">         ┌─────┐   ┌─────┐   ┌─────┐
- f_in ──▶│ PD  │──▶│ NPF │──▶│ VCO │──┬──▶ f_out = N·f_in
-         └─────┘   └─────┘   └─────┘  │
-            ▲                         │
-            │      ┌──────────┐       │
-            └──────│ Brojilo  │◀──────┘
-                   │   /N     │
-                   └──────────┘</div>
+      <img class="schema" src="img/pll.png" alt="PLL blok shema" loading="lazy">
       <div class="expl">
         PLL (Phase-Locked Loop) sastoji se od:
         <ul class="clean">
@@ -276,18 +259,7 @@
     <div class="q"><span class="badge">T8</span><span class="qt">RC oscilator sa Schmittovim okidnim sklopom</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram">      ┌──────[ R1 ]──────┐
-      │                  │
- Uc ──┴──▷○──────────────┴──── U_izl
-      │   74HCT14
-    ──┴──  (Schmitt inverter)
-    ──┬──  C1
-      │
-     GND
-
- Uc:   ╱‾‾╲    ╱‾‾╲     (puni se / prazni po eksponencijali
-      ╱    ╲  ╱    ╲     između U_gornje i U_donje)
- Uiz: ‾‾│__│‾‾│__│‾‾   (pravokutni izlaz)</div>
+      <img class="schema" src="img/rc-oscilator.png" alt="RC oscilator sa Schmittovim okidnim sklopom" loading="lazy">
       <div class="expl">
         Schmitt-trigger invertor s <b>otpornikom R u povratnoj vezi</b> i <b>kondenzatorom C prema masi</b>.
         Na početku je C prazan (Uc=0V) → invertor daje 1 na izlazu → C se puni preko R po eksponencijali.
@@ -366,17 +338,7 @@
     <div class="q"><span class="badge">T12</span><span class="qt">Sklopovlje za upravljanje resetom</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram">          △ VDD
-          │
-         [R] pritezni otpornik
-          │      ┌────────┐   ┌──────┐
- NRST ────┼─────▶│ Filter │──▶│ │‾‾  │────▶ System reset
-   ▭      │      └────────┘   └──────┘
-(tipka)   │      ┌──────────┐ ── Power reset
-          └─────│ Pulse gen │── IWDG reset
-                │ (min 20us)│── WWDG reset
-                └──────────┘ ── Software reset
-                             ── Low-power mgmt reset</div>
+      <img class="schema" src="img/reset.png" alt="Sklopovlje za upravljanje resetom" loading="lazy">
       <div class="expl">
         <ul class="clean">
           <li><b>NRST priključak</b> (sivi kvadratić + tipka) — reset koji traži korisnik ili vanjsko sklopovlje.</li>
@@ -421,16 +383,7 @@
     <div class="q"><span class="badge">T14</span><span class="qt">Boundary-scan (JTAG) arhitektura</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram">       ulazni priključci
-       ▢  ▢  ▢  ▢  ▢
- TDI ─▶■──■──■──■──■─┐
- TCK ─▶ ┌───────────┐│
- TMS ─▶ │ DIGITALNI ││
-        │  SUSTAV   ││
- TDO ◀─ └───────────┘│
-       ■──■──■──■──■─┘
-       ▢  ▢  ▢  ▢  ▢
-       izlazni priključci</div>
+      <img class="schema" src="img/boundary-scan.png" alt="Boundary-scan vise integriranih sklopova" loading="lazy">
       <div class="expl">
         Na svaki ulazni/izlazni priključak integriranog sklopa stavi se po jedna <b>boundary-scan ćelija</b>.
         Ćelije su povezane u <b>posmačni registar (shift register)</b> — podatke serijski upisujemo (preko TDI)
@@ -463,13 +416,7 @@
         <br><b>Tri osnovna objekta:</b> <b>signal</b>, <b>varijabla</b> i <b>konstanta</b>.
       </div>
       <h4 class="sh">SPI — povezivanje mastera s 3 neovisna slavea</h4>
-      <div class="diagram"> SPI Master            SPI Slave 1/2/3
- SCLK ───────┬──────┬──────▶ SCLK
- MOSI ───────┼──────┼──────▶ MOSI
- MISO ◀──────┼──────┼─────── MISO
- SS1  ──────────────────────▶ SS  (slave 1)
- SS2  ──────────────────────▶ SS  (slave 2)
- SS3  ──────────────────────▶ SS  (slave 3)</div>
+      <img class="schema" src="img/spi.png" alt="SPI master s 3 neovisna slave uredaja" loading="lazy">
       <div class="expl"><b>Neovisni slave uređaji:</b> SCLK, MOSI, MISO su zajednički, ali svaki slave ima
       <b>vlastiti SS</b> signal. Master pazi da je u svakom trenutku aktivan <i>samo jedan</i> SS kako ne bi
       došlo do kolizije na MISO liniji.</div>
@@ -495,13 +442,7 @@
     <div class="q"><span class="badge">T17</span><span class="qt">Sistemsko brojilo (SysTick) — blok shema, registri, adrese</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram">                       ┌─────┐  -1
-            RELOAD ───▶│  +  │◀────┐
-               │       └──┬──┘     │
-               ▼          ▼        │
- AHB clk ─/8─▶ MUX ──▶ CURRENT ───┴──▶ (= 0?) ──▶ SysTick interrupt
-               ▲         │CE
-          CLKSOURCE   ENABLE              TICKINT</div>
+      <img class="schema" src="img/systick.png" alt="Blok shema sistemskog brojila SysTick" loading="lazy">
       <div class="expl">
         SysTick je <b>24-bitno brojilo koje broji prema dolje</b>. Odbroji od vrijednosti u <code>STK_LOAD</code>
         do nule, generira prekid i <b>automatski se ponovo učita</b> na RELOAD vrijednost.
@@ -530,18 +471,7 @@
     <div class="q"><span class="badge">T18</span><span class="qt">Memorijska mapa kodnog prostora STM32F407</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram"> BOOT1=x, BOOT0=0          BOOT1=0, BOOT0=1
- 0x1FFF FFFF ┌──────────┐   ┌──────────┐
-             │Option by.│   │Option by.│
- 0x1FFF 0000 │System mem│   │System mem│  ← boot loader
- 0x1000 FFFF ├──────────┤   ├──────────┤
-             │ CCM RAM  │   │ CCM RAM  │
- 0x0810 0000 ├──────────┤   ├──────────┤
-             │  Flash   │   │  Flash   │
- 0x0800 0000 ├──────────┤   ├──────────┤
- 0x0010 0000 │  Flash   │   │          │  ← mapirano na 0x0
- 0x0000 0000 │ (alias)  │   │System mem│
-             └──────────┘   └──────────┘</div>
+      <img class="schema" src="img/memory-map.png" alt="Memorijska mapa STM32F407" loading="lazy">
       <div class="expl">
         <ul class="clean">
           <li><b>System memory</b> — sadrži ugrađeni <b>boot loader</b>; ako je odabrana kao boot memorija
@@ -561,20 +491,7 @@
     <div class="q"><span class="badge">T19</span><span class="qt">Cortex-M4 — blok shema, registri, statusni registri, iznimke</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram"> ┌─────────────────────────────────────┐
- │ Cortex-M4   ┌─────┐      ┌─────────┐ │
- │   ┌────┐    │ FPU │      │ Embedded│ │
- │   │NVIC│◀──▶├─────┤      │  Trace  │ │
- │   └────┘    │Proc.│◀────▶│ Macrocell││
- │   ┌────┐    │core │      └─────────┘ │
- │   │Debug│◀─▶├─────┤      ┌─────────┐ │
- │   │ port│   │ MPU │◀────▶│ Serial  │ │
- │   └────┘    └─────┘      │  wire   │ │
- │   ┌──────────────────┐   └─────────┘ │
- │   │    Bus matrix    │               │
- │   └──┬────────────┬──┘               │
- │  Code if.    SRAM+periph. if.        │
- └─────────────────────────────────────┘</div>
+      <img class="schema" src="img/cortex-m4.png" alt="Blok shema procesora Cortex-M4" loading="lazy">
       <div class="expl">
         <b>Arhitektura:</b> Harvardska (odvojena programska i podatkovna sabirnica). <b>Širina podataka 32 bita</b>,
         zapis little ili big endian (STM32 koristi little). Poravnanje: riječi na adresama ÷4, poluriječi ÷2,
@@ -603,11 +520,7 @@
     <div class="q"><span class="badge">T20</span><span class="qt">NVIC, sabirnice procesora, upravljači/izvršioci, spajanje periferija</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram"> CSS ───────▶ NMI ┐
- Peripherals ────┤
- EXTI ──────▶IRQ ├─▶ NVIC ─▶ Cortex-M4 core
- SysTick ────────┤   (System exceptions)
-                 ┘</div>
+      <img class="schema" src="img/nvic.png" alt="NVIC prekidni kontroler" loading="lazy">
       <div class="expl">
         <b>NVIC</b> (Nested Vectored Interrupt Controller) obrađuje: nemaskirani prekid (<b>NMI</b>),
         obične zahtjeve za prekid (<b>IRQ</b> od periferija/EXTI) i sistemske iznimke (npr. SysTick).
@@ -658,13 +571,7 @@
     <div class="q"><span class="badge">T22</span><span class="qt">Kvarcni oscilator · sklopovlje za generiranje takta · izvori takta</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram">   ┌──[ Q (kvarc) ]──┐
-   │                 │
- ──┴──▶│\   ┌──[Ra]──┴──▶ izlaz
-   │   │ A >─┘  pojačalo
-  [R1] │/
-   │
-  GND</div>
+      <img class="schema" src="img/kvarc.png" alt="Kvarcni oscilator" loading="lazy">
       <div class="expl">
         <b>Kvarcni oscilator:</b> pojačalo s povratnom vezom u kojoj je <b>kvarc (kristal)</b>. Kvarc na svojoj
         rezonantnoj frekvenciji ima maksimalno pojačanje petlje pa sklop oscilira upravo na toj (vrlo stabilnoj
@@ -720,13 +627,7 @@
     <div class="q"><span class="badge">T24</span><span class="qt">Napajanje STM32F407 · serijski (linearni) regulator</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram"> +5V ──[F osigurač]──┬─────────┬────────┐
-                    │      ┌──┴──┐     │      +3.3V
-                  [D zener]│ REG │   [C in]   ──┬──
-                    │      │78R33│     │      [C out]
-                   GND     └──┬──┘    GND        │
-                              │                 GND
-                            +3.3V ──────────────┘</div>
+      <img class="schema" src="img/regulator.png" alt="Serijski regulator napajanja" loading="lazy">
       <div class="expl">
         Serijski (linearni) regulator (npr. 78R33) iz <b>+5V</b> daje stabilnih <b>+3.3V</b> za mikrokontroler.
         <ul class="clean">
@@ -1997,12 +1898,7 @@ DEBOUNCE: INPUT  s0, TIPKALO   <span class="com">; pročitaj stanje tipkala</spa
     <div class="q"><span class="badge">D4</span><span class="qt">PicoBlaze — 5 ulaznih jedinica (blok shema + VHDL + ASM)</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram"> [4]┐
- [3]┤
- [2]┼─▶ MUX ─▶ D ─▶ in_port[7:0] ─▶│ kcpsm6 │
- [1]┤         (reg)                │ read_strobe ▶
- [0]┘  PORT 01                     │ port_id[7:0]│
-                clk ──────────────▶│ clk         │</div>
+      <img class="schema" src="img/picoblaze-5in.png" alt="Spajanje 5 ulaznih jedinica na PicoBlaze" loading="lazy">
       <pre><code><span class="kw">entity</span> Input_Interface <span class="kw">is</span>
     <span class="kw">port</span>( clk:       <span class="kw">in</span>  std_logic;
           port01:    <span class="kw">in</span>  std_logic_vector(<span class="num">4</span> <span class="kw">downto</span> <span class="num">0</span>);  <span class="com">-- 5 ulaznih jedinica</span>
@@ -2034,12 +1930,7 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
     <div class="q"><span class="badge">D5</span><span class="qt">PicoBlaze — blok dijagram VJ (prima na 0x20, šalje na 0x40) + signali</span></div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <div class="diagram"> in_port[7:0] ──▶┌──────────┐──▶ out_port[7:0]
-                 │ I/O Ports│──▶ write_strobe
-                 │          │──▶ read_strobe
-                 │          │──▶ port_id[7:0]
-                 └──────────┘
-                    ▲ clk, reset</div>
+      <img class="schema" src="img/picoblaze-vj.png" alt="Blok dijagram vanjske jedinice na PicoBlaze" loading="lazy">
       <div class="expl">
         Signali kojima vanjska jedinica i PicoBlaze komuniciraju s logikom za spajanje:
         <ul class="clean">
