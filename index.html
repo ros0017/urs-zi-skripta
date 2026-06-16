@@ -95,6 +95,41 @@
   a.up{position:fixed;bottom:22px;right:22px;background:var(--acc);color:#06101f;
     width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;
     font-size:1.3rem;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.4);font-weight:700}
+
+  /* --- toolbar: search + progress --- */
+  .controls{align-items:center}
+  .search{flex:1 1 260px;min-width:170px;display:flex;align-items:center;gap:8px;
+    background:var(--card);border:1px solid var(--line);border-radius:9px;padding:6px 12px}
+  .search input{flex:1;background:transparent;border:0;outline:0;color:var(--txt);font-size:.9rem}
+  .search input::placeholder{color:var(--com)}
+  .progwrap{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--mut)}
+  .progbar{width:110px;height:8px;background:var(--card2);border:1px solid var(--line);
+    border-radius:6px;overflow:hidden}
+  .progbar>span{display:block;height:100%;width:0;
+    background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .3s}
+  .tab .cnt{margin-left:6px;font-size:.7rem;opacity:.65}
+
+  /* --- "naučeno" oznaka --- */
+  .check{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--mut);
+    border-radius:20px;padding:3px 11px;font-size:.74rem;cursor:pointer;font-weight:700;flex:0 0 auto}
+  .check:hover{border-color:var(--acc2);color:var(--acc2)}
+  .task.done{border-color:var(--acc2)}
+  .task.done>.q{box-shadow:inset 4px 0 0 var(--acc2)}
+  .task.done .check{background:var(--acc2);color:#06101f;border-color:var(--acc2)}
+
+  /* --- pretraga: prikaz svih sekcija --- */
+  .sec-title{display:none;font-size:1.05rem;color:var(--acc);font-weight:700;
+    margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  body.searching .sec-title{display:block}
+  body.searching .panel{display:block!important}
+  body.searching .intro{display:none}
+  body.searching .allbtn{opacity:.35;pointer-events:none}
+  .task.nomatch{display:none}
+  .panel.nohits{display:none!important}
+  .noresults{display:none;text-align:center;color:var(--mut);padding:24px;
+    background:var(--card);border:1px dashed var(--line);border-radius:12px;margin-bottom:18px}
+  body.searching .noresults.show{display:block}
+  mark{background:var(--warn);color:#06101f;border-radius:3px;padding:0 2px}
 </style>
 </head>
 <body>
@@ -116,9 +151,18 @@
   </nav>
 
   <div class="controls">
-    <button class="btn" onclick="allSol(true)">▼ Otvori sva rješenja</button>
-    <button class="btn" onclick="allSol(false)">▲ Zatvori sva rješenja</button>
+    <label class="search">🔎 <input id="q" type="text" autocomplete="off"
+      placeholder="Traži po svim pitanjima (npr. PLL, EXTI, kvadrat, Flash, paritet)…"></label>
+    <button class="btn allbtn" onclick="allSol(true)">▼ Otvori rješenja</button>
+    <button class="btn allbtn" onclick="allSol(false)">▲ Zatvori rješenja</button>
+    <button class="btn" onclick="randomQ()">🎲 Nasumično pitanje</button>
+    <div class="progwrap" title="Označeno kao naučeno">
+      <span id="progtxt">0/0</span>
+      <div class="progbar"><span id="progfill"></span></div>
+      <button class="btn" onclick="resetProg()" title="Poništi napredak" style="padding:4px 9px">↺</button>
+    </div>
   </div>
+  <div class="noresults" id="noresults">Nema rezultata za tu pretragu.</div>
 
 <!-- ============================ TEORIJA ============================ -->
 <section class="panel active" id="t">
@@ -1961,51 +2005,137 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
 </footer>
 
 <script>
-  // Tabs
-  const tabs = document.querySelectorAll('.tab');
-  const panels = document.querySelectorAll('.panel');
-  tabs.forEach(t=>t.addEventListener('click',()=>{
-    tabs.forEach(x=>x.classList.remove('active'));
-    panels.forEach(x=>x.classList.remove('active'));
-    t.classList.add('active');
-    document.getElementById(t.dataset.p).classList.add('active');
-    window.scrollTo({top:0,behavior:'smooth'});
-  }));
+  const tabs = [...document.querySelectorAll('.tab')];
+  const panels = [...document.querySelectorAll('.panel')];
+  const labels = {}; tabs.forEach(t=>labels[t.dataset.p]=t.textContent.trim());
 
-  // Toggle solutions
-  document.querySelectorAll('.toggle').forEach(tg=>{
-    tg.addEventListener('click',()=>{
-      tg.classList.toggle('open');
-      tg.nextElementSibling.classList.toggle('open');
+  // --- inicijalizacija kartica: stabilan id, naslov sekcije, "naučeno" gumb ---
+  let TOTAL = 0;
+  panels.forEach(p=>{
+    const title = document.createElement('div');
+    title.className = 'sec-title';
+    title.textContent = labels[p.id] || p.id;
+    p.insertBefore(title, p.firstChild);
+    p.querySelectorAll('.task').forEach(task=>{
+      TOTAL++;
+      const badge = task.querySelector('.badge');
+      const id = p.id + '/' + (badge ? badge.textContent.trim() : Math.random());
+      task.dataset.id = id;
+      const tg = task.querySelector('.toggle');
+      if(tg){
+        const chk = document.createElement('button');
+        chk.className = 'check';
+        chk.type = 'button';
+        chk.textContent = '✓ naučeno';
+        chk.addEventListener('click', e=>{ e.stopPropagation(); toggleDone(task); });
+        tg.appendChild(chk);
+      }
     });
   });
-  function allSol(open){
-    const panel = document.querySelector('.panel.active');
-    panel.querySelectorAll('.toggle').forEach(tg=>{
-      const sol = tg.nextElementSibling;
-      tg.classList.toggle('open', open);
-      sol.classList.toggle('open', open);
+
+  // --- napredak (localStorage) ---
+  const PKEY = 'urs_zi_progress';
+  let done = new Set(JSON.parse(localStorage.getItem(PKEY) || '[]'));
+  function applyDone(){
+    document.querySelectorAll('.task').forEach(t=>t.classList.toggle('done', done.has(t.dataset.id)));
+    const n = [...document.querySelectorAll('.task')].filter(t=>done.has(t.dataset.id)).length;
+    document.getElementById('progtxt').textContent = n + '/' + TOTAL;
+    document.getElementById('progfill').style.width = TOTAL ? (100*n/TOTAL)+'%' : '0';
+    tabs.forEach(t=>{
+      const p = document.getElementById(t.dataset.p);
+      const all = p.querySelectorAll('.task').length;
+      const d = [...p.querySelectorAll('.task')].filter(x=>done.has(x.dataset.id)).length;
+      let c = t.querySelector('.cnt');
+      if(!c){ c = document.createElement('span'); c.className='cnt'; t.appendChild(c); }
+      c.textContent = '('+d+'/'+all+')';
     });
   }
-  // Jump to theory task by badge text
+  function toggleDone(task){
+    if(done.has(task.dataset.id)) done.delete(task.dataset.id); else done.add(task.dataset.id);
+    localStorage.setItem(PKEY, JSON.stringify([...done]));
+    applyDone();
+  }
+  function resetProg(){
+    if(confirm('Poništiti sav označeni napredak?')){ done.clear(); localStorage.removeItem(PKEY); applyDone(); }
+  }
+  applyDone();
+
+  // --- tabovi ---
+  function showTab(id){
+    const inp = document.getElementById('q'); if(inp.value){ inp.value=''; doSearch(); }
+    tabs.forEach(x=>x.classList.toggle('active', x.dataset.p===id));
+    panels.forEach(x=>x.classList.toggle('active', x.id===id));
+  }
+  tabs.forEach(t=>t.addEventListener('click',()=>{ showTab(t.dataset.p); window.scrollTo({top:0,behavior:'smooth'}); }));
+
+  // --- prikaz rješenja ---
+  document.querySelectorAll('.toggle').forEach(tg=>{
+    tg.addEventListener('click',()=>{ tg.classList.toggle('open'); tg.nextElementSibling.classList.toggle('open'); });
+  });
+  function allSol(open){
+    const panel = document.querySelector('.panel.active') || document;
+    panel.querySelectorAll('.toggle').forEach(tg=>{
+      tg.classList.toggle('open', open);
+      tg.nextElementSibling.classList.toggle('open', open);
+    });
+  }
+
+  // --- pretraga (globalno, kroz sve sekcije) ---
+  const qInput = document.getElementById('q');
+  function doSearch(){
+    const q = qInput.value.trim().toLowerCase();
+    const allTasks = document.querySelectorAll('.task');
+    if(!q){
+      document.body.classList.remove('searching');
+      allTasks.forEach(t=>t.classList.remove('nomatch'));
+      panels.forEach(p=>p.classList.remove('nohits'));
+      document.getElementById('noresults').classList.remove('show');
+      return;
+    }
+    document.body.classList.add('searching');
+    let hits = 0;
+    panels.forEach(p=>{
+      let vis = 0;
+      p.querySelectorAll('.task').forEach(t=>{
+        const m = t.textContent.toLowerCase().includes(q);
+        t.classList.toggle('nomatch', !m);
+        if(m){ vis++; hits++; }
+      });
+      p.classList.toggle('nohits', vis===0);
+    });
+    document.getElementById('noresults').classList.toggle('show', hits===0);
+  }
+  qInput.addEventListener('input', doSearch);
+  qInput.addEventListener('keydown', e=>{ if(e.key==='Escape'){ qInput.value=''; doSearch(); } });
+
+  // --- nasumično pitanje (samotestiranje) ---
+  function flash(task){
+    task.scrollIntoView({behavior:'smooth',block:'center'});
+    task.style.transition='box-shadow .3s';
+    task.style.boxShadow='0 0 0 2px var(--acc)';
+    setTimeout(()=>task.style.boxShadow='',1500);
+  }
+  function randomQ(){
+    if(qInput.value){ qInput.value=''; doSearch(); }
+    const all = [...document.querySelectorAll('.task')];
+    const task = all[Math.floor(Math.random()*all.length)];
+    const pid = task.closest('.panel').id;
+    showTab(pid);
+    const tg = task.querySelector('.toggle');         // zatvori rješenje za samotest
+    if(tg){ tg.classList.remove('open'); tg.nextElementSibling.classList.remove('open'); }
+    setTimeout(()=>flash(task), 60);
+  }
+
+  // --- skok na teorijsku karticu po badge-u ---
   function goT(id){
-    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));
-    document.querySelector('.tab[data-p="t"]').classList.add('active');
+    showTab('t');
     const t = document.getElementById('t');
-    t.classList.add('active');
-    // find badge
-    const badges = t.querySelectorAll('.badge');
-    for(const b of badges){
+    for(const b of t.querySelectorAll('.badge')){
       if(b.textContent.trim()===id){
         const task = b.closest('.task');
         const tg = task.querySelector('.toggle');
-        tg.classList.add('open');
-        tg.nextElementSibling.classList.add('open');
-        task.scrollIntoView({behavior:'smooth',block:'center'});
-        task.style.transition='box-shadow .3s';
-        task.style.boxShadow='0 0 0 2px var(--acc)';
-        setTimeout(()=>task.style.boxShadow='',1400);
+        tg.classList.add('open'); tg.nextElementSibling.classList.add('open');
+        setTimeout(()=>flash(task), 60);
         break;
       }
     }
