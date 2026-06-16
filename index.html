@@ -887,13 +887,15 @@ __asm(<span class="str">".global __use_no_semihosting"</span>);
     <span class="kw">return</span> (GPIOD-&gt;IDR &amp; <span class="num">0x00000007</span>);   <span class="com">// maska bita 0-2</span>
 }
 
-<span class="com">// "ispis" = generiranje tona na zvučniku GPIOE11</span>
-<span class="kw">int</span> <span class="fn">fputc</span>(<span class="kw">int</span> trajanje, FILE *f){
+<span class="com">// "ispis" = generiranje tona na GPIOE11. printf šalje JEDAN znak:</span>
+<span class="com">// 'S' = kratak (500 ms), 'L' = dugačak (2000 ms)</span>
+<span class="kw">int</span> <span class="fn">fputc</span>(<span class="kw">int</span> c, FILE *f){
     (<span class="kw">void</span>)f;
+    <span class="kw">unsigned int</span> trajanje = (c == <span class="str">'L'</span>) ? <span class="num">2000</span> : <span class="num">500</span>;
     GPIOE-&gt;ODR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">11</span>);   <span class="com">// upali zvučnik (pišti)</span>
-    <span class="fn">Pause</span>(trajanje);            <span class="com">// drži ton</span>
+    <span class="fn">Pause</span>(trajanje);            <span class="com">// drži ton (kratak/dugačak)</span>
     GPIOE-&gt;ODR &amp;= ~(<span class="num">1UL</span> &lt;&lt; <span class="num">11</span>);  <span class="com">// ugasi zvučnik</span>
-    <span class="kw">return</span> trajanje;
+    <span class="kw">return</span> c;
 }
 <span class="kw">int</span> <span class="fn">ferror</span>(FILE *f){ (<span class="kw">void</span>)f; <span class="kw">return</span> <span class="num">0</span>; }
 __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exit</span>(<span class="kw">int</span> rc){ (<span class="kw">void</span>)rc; <span class="kw">while</span>(<span class="num">1</span>); }</code></pre>
@@ -910,16 +912,16 @@ __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exi
     <span class="kw">volatile int</span> broj;
     <span class="kw">while</span>(<span class="num">1</span>){
         <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;broj);          <span class="com">// pročitaj GPIOD0-2 (preko fgetc)</span>
-        <span class="kw">if</span>(broj &lt; <span class="num">4</span>)
-            <span class="fn">printf</span>(<span class="str">"%d"</span>, <span class="num">500</span>);       <span class="com">// kratak ton 500 ms</span>
-        <span class="kw">else</span>
-            <span class="fn">printf</span>(<span class="str">"%d"</span>, <span class="num">2000</span>);      <span class="com">// dugačak ton 2000 ms</span>
+        <span class="fn">printf</span>(<span class="str">"%c"</span>, broj &lt; <span class="num">4</span> ? <span class="str">'S'</span> : <span class="str">'L'</span>);  <span class="com">// 1 znak: 'S'=kratak, 'L'=dugačak</span>
         <span class="fn">Pause</span>(<span class="num">300</span>);                  <span class="com">// razmak između tonova</span>
     }
 }</code></pre>
       <div class="expl"><b>Ključ zadatka:</b> "retargeting" znači preusmjeriti standardne I/O funkcije.
       <code>scanf</code> interno zove <code>fgetc</code> (čita GPIO), a <code>printf</code> zove <code>fputc</code>
-      (svaki znak → jedan ton). Trik je da trajanje tona predamo printf-u, a fputc napravi pisak odgovarajuće duljine.</div>
+      <b>za svaki znak posebno</b>. Zato <u>ne</u> smiješ raditi <code>printf("%d", 500)</code> — to bi poslalo
+      znamenke '5','0','0' i fputc bi se pozvao tri puta (tri kratka pijuka)! Umjesto toga šaljemo
+      <b>jedan znak</b> (<code>%c</code>) koji kodira trajanje, a fputc ga mapira u kratak/dugačak ton.
+      To je upravo ono na što je upozorio Vučić ("argument printf-a nije paljenje zvučnika nego pištanje").</div>
     </div>
   </div>
 
@@ -1036,7 +1038,11 @@ __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exi
     </div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <pre><code><span class="kw">entity</span> square <span class="kw">is</span>
+      <pre><code><span class="kw">library</span> IEEE;
+<span class="kw">use</span> IEEE.std_logic_1164.<span class="kw">all</span>;
+<span class="kw">use</span> IEEE.std_logic_unsigned.<span class="kw">all</span>;   <span class="com">-- za operator * nad std_logic_vector</span>
+
+<span class="kw">entity</span> square <span class="kw">is</span>
     <span class="kw">port</span>( clk, rst:    <span class="kw">in</span>  std_logic;
           port_id:      <span class="kw">in</span>  std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);
           in_port:      <span class="kw">in</span>  std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);
@@ -1054,10 +1060,10 @@ __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exi
         sq := (<span class="kw">others</span> =&gt; <span class="str">'0'</span>);
     <span class="kw">elsif</span> rising_edge(clk) <span class="kw">then</span>
         <span class="kw">if</span> port_id = <span class="str">"00010000"</span> <span class="kw">and</span> write_strobe = <span class="str">'1'</span> <span class="kw">then</span>
-            sq := in_port * in_port;          <span class="com">// 0x10: upiši i izračunaj kvadrat</span>
+            sq := in_port * in_port;          <span class="com">-- 0x10: upiši i izračunaj kvadrat (8b·8b=16b)</span>
         <span class="kw">elsif</span> read_strobe = <span class="str">'1'</span> <span class="kw">then</span>
-            <span class="kw">if</span>    port_id = <span class="str">"00100000"</span> <span class="kw">then</span> out_port &lt;= sq(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);  <span class="com">// 0x20 niži</span>
-            <span class="kw">elsif</span> port_id = <span class="str">"00100001"</span> <span class="kw">then</span> out_port &lt;= sq(<span class="num">15</span> <span class="kw">downto</span> <span class="num">8</span>); <span class="com">// 0x21 viši</span>
+            <span class="kw">if</span>    port_id = <span class="str">"00100000"</span> <span class="kw">then</span> out_port &lt;= sq(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);  <span class="com">-- 0x20 niži</span>
+            <span class="kw">elsif</span> port_id = <span class="str">"00100001"</span> <span class="kw">then</span> out_port &lt;= sq(<span class="num">15</span> <span class="kw">downto</span> <span class="num">8</span>); <span class="com">-- 0x21 viši</span>
             <span class="kw">end if</span>;
         <span class="kw">end if</span>;
     <span class="kw">end if</span>;
@@ -1115,8 +1121,12 @@ __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exi
       <pre><code><span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){
     <span class="fn">init_GPIOD</span>();             <span class="com">// dana funkcija (mora i GPIOB konfigurirati izlazno)</span>
     <span class="kw">volatile int</span> v;
-    <span class="kw">while</span>(<span class="num">1</span>){ <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;v); <span class="fn">printf</span>(<span class="str">"%d"</span>, v); }
+    <span class="com">// %c (ne %d!) da fputc dobije pravu vrijednost 0-3, a ne ASCII znamenku</span>
+    <span class="kw">while</span>(<span class="num">1</span>){ <span class="fn">scanf</span>(<span class="str">"%d"</span>, &amp;v); <span class="fn">printf</span>(<span class="str">"%c"</span>, v); }
 }</code></pre>
+      <div class="note"><b>Pažnja na retargeting:</b> da je stajalo <code>printf("%d", v)</code>, za v=0 bi printf poslao
+      znak '0' (0x30=48), pa bi <code>fputc</code> dobio 48 — <code>c==0</code> nikad ne bi bilo istinito.
+      Zato <code>%c</code> šalje sirovu vrijednost (0–3) u fputc.</div>
       <div class="note">Tekst zadatka miješa GPIOD14/15 i GPIOB14/15 — logika ostaje ista, samo pripazi koji port
       je izlazni. "Parna" se ovdje ispituje kao najniži bit = 0.</div>
     </div>
@@ -1129,20 +1139,22 @@ __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exi
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
       <pre><code><span class="kw">void</span> <span class="fn">init_Flash</span>(<span class="kw">void</span>){
-    <span class="com">// Za napon ~2.1-2.4V i HCLK 90 MHz -> 3 wait statea (LATENCY = 3)</span>
-    <span class="com">// (tablica iz datasheeta: pri 2.0V granice su ~22/44/66/88 MHz po WS)</span>
+    <span class="com">// Napon 2V (raspon 1.8-2.1V): granice su svakih 20 MHz</span>
+    <span class="com">// 0WS≤20, 1WS≤40, 2WS≤60, 3WS≤80, 4WS≤100 -> 90 MHz traži 4 WS</span>
     FLASH-&gt;ACR &amp;= ~FLASH_ACR_LATENCY;         <span class="com">// očisti polje LATENCY</span>
-    FLASH-&gt;ACR |=  FLASH_ACR_LATENCY_3WS;     <span class="com">// 3 stanja čekanja</span>
+    FLASH-&gt;ACR |=  FLASH_ACR_LATENCY_4WS;     <span class="com">// 4 stanja čekanja</span>
     FLASH-&gt;ACR |=  FLASH_ACR_PRFTEN;          <span class="com">// prefetch enable</span>
     FLASH-&gt;ACR |=  FLASH_ACR_ICEN;            <span class="com">// instrukcijski cache</span>
     FLASH-&gt;ACR |=  FLASH_ACR_DCEN;            <span class="com">// podatkovni cache</span>
 
     <span class="com">// provjeri da je LATENCY stvarno postavljen</span>
-    <span class="kw">while</span>((FLASH-&gt;ACR &amp; FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_3WS);
+    <span class="kw">while</span>((FLASH-&gt;ACR &amp; FLASH_ACR_LATENCY) != FLASH_ACR_LATENCY_4WS);
 }</code></pre>
-      <div class="expl"><b>Broj WS</b> se određuje iz tablice (napon × frekvencija). Na ~2V granica po WS-u je niža
-      nego na 3.3V, pa 90 MHz traži 3 WS. <b>PRFTEN</b> = predčitanje, <b>ICEN/DCEN</b> = instrukcijski i podatkovni
-      cache. Vidi <a href="#" onclick="goT('T9');return false;" style="color:var(--acc)">Teorija T9</a>.</div>
+      <div class="expl"><b>Broj WS</b> se određuje iz tablice (napon × frekvencija). Pri <b>2 V</b> (raspon 1.8–2.1 V)
+      svaki WS pokriva pojas od 20 MHz: 0WS ≤20, 1WS ≤40, 2WS ≤60, 3WS ≤80, <b>4WS ≤100</b> → 90 MHz pada u
+      pojas 80–100 MHz = <b>4 WS</b>. (Na 3.3 V pojasi su širi — po 30 MHz — pa bi 90 MHz tamo bio 2 WS; zato je
+      napon ključan.) <b>PRFTEN</b> = predčitanje, <b>ICEN/DCEN</b> = cache. Vidi
+      <a href="#" onclick="goT('T9');return false;" style="color:var(--acc)">Teorija T9</a>.</div>
     </div>
   </div>
 
@@ -1260,7 +1272,7 @@ __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exi
 
 <span class="kw">architecture</span> reg_arh <span class="kw">of</span> reg <span class="kw">is</span>
 <span class="kw">begin</span>
-    <span class="kw">process</span>(clk, reset)        <span class="com">// reset u listi osjetljivosti = asinkron!</span>
+    <span class="kw">process</span>(clk, reset)        <span class="com">-- reset u listi osjetljivosti = asinkron!</span>
     <span class="kw">begin</span>
         <span class="kw">if</span> reset = <span class="str">'1'</span> <span class="kw">then</span>
             reg_val &lt;= (<span class="kw">others</span> =&gt; <span class="str">'0'</span>);
@@ -1287,16 +1299,16 @@ __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exi
 
 <span class="kw">entity</span> movavg4 <span class="kw">is</span> <span class="kw">port</span>(
     clk, rst:     <span class="kw">in</span>  std_logic;
-    port_id:      <span class="kw">in</span>  std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);   <span class="com">// adresna sabirnica</span>
-    in_port:      <span class="kw">in</span>  std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);   <span class="com">// na out_port od KCPSM6</span>
+    port_id:      <span class="kw">in</span>  std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);   <span class="com">-- adresna sabirnica</span>
+    in_port:      <span class="kw">in</span>  std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);   <span class="com">-- na out_port od KCPSM6</span>
     write_strobe: <span class="kw">in</span>  std_logic;
-    out_port:     <span class="kw">out</span> std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);   <span class="com">// na in_port od KCPSM6</span>
+    out_port:     <span class="kw">out</span> std_logic_vector(<span class="num">7</span> <span class="kw">downto</span> <span class="num">0</span>);   <span class="com">-- na in_port od KCPSM6</span>
     read_strobe:  <span class="kw">in</span>  std_logic);
 <span class="kw">end entity</span>;
 
 <span class="kw">architecture</span> arch <span class="kw">of</span> movavg4 <span class="kw">is</span>
     <span class="kw">signal</span> x3, x2, x1, x0, result: std_logic_vector(<span class="num">9</span> <span class="kw">downto</span> <span class="num">0</span>) := (<span class="kw">others</span>=&gt;<span class="str">'0'</span>);
-    <span class="kw">signal</span> pun: std_logic_vector(<span class="num">2</span> <span class="kw">downto</span> <span class="num">0</span>) := <span class="str">"000"</span>;  <span class="com">// brojač punjenja (4)</span>
+    <span class="kw">signal</span> pun: std_logic_vector(<span class="num">2</span> <span class="kw">downto</span> <span class="num">0</span>) := <span class="str">"000"</span>;  <span class="com">-- brojač punjenja (4)</span>
 <span class="kw">begin</span>
   output: <span class="kw">process</span>(clk)
   <span class="kw">begin</span>
@@ -1304,19 +1316,19 @@ __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exi
         <span class="kw">if</span> rst = <span class="str">'1'</span> <span class="kw">or</span> (port_id = <span class="str">"00110000"</span> <span class="kw">and</span> write_strobe = <span class="str">'1'</span>) <span class="kw">then</span>
             x3&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>); x2&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>);
             x1&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>); x0&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>);
-            result&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>); out_port&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>); pun&lt;=<span class="str">"000"</span>; <span class="com">// 0x30 = reset</span>
+            result&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>); out_port&lt;=(<span class="kw">others</span>=&gt;<span class="str">'0'</span>); pun&lt;=<span class="str">"000"</span>; <span class="com">-- 0x30 = reset</span>
         <span class="kw">else</span>
-            <span class="kw">if</span> write_strobe = <span class="str">'1'</span> <span class="kw">then</span>          <span class="com">// upis novog uzorka (0x10)</span>
+            <span class="kw">if</span> write_strobe = <span class="str">'1'</span> <span class="kw">then</span>          <span class="com">-- upis novog uzorka (0x10)</span>
                 <span class="kw">if</span> pun /= <span class="str">"100"</span> <span class="kw">then</span> pun &lt;= pun + <span class="num">1</span>; <span class="kw">end if</span>;
-                x3 &lt;= x2; x2 &lt;= x1; x1 &lt;= x0;   <span class="com">// posmak (shift register)</span>
-                x0 &lt;= <span class="str">"00"</span> &amp; in_port;            <span class="com">// novi uzorak (proširen na 10 bita)</span>
+                x3 &lt;= x2; x2 &lt;= x1; x1 &lt;= x0;   <span class="com">-- posmak (shift register)</span>
+                x0 &lt;= <span class="str">"00"</span> &amp; in_port;            <span class="com">-- novi uzorak (proširen na 10 bita)</span>
             <span class="kw">end if</span>;
-            <span class="kw">if</span> read_strobe = <span class="str">'1'</span> <span class="kw">then</span>           <span class="com">// čitanje rezultata (0x20)</span>
-                out_port &lt;= result(<span class="num">9</span> <span class="kw">downto</span> <span class="num">2</span>);  <span class="com">// dijeljenje s 4 = pomak za 2</span>
+            <span class="kw">if</span> read_strobe = <span class="str">'1'</span> <span class="kw">then</span>           <span class="com">-- čitanje rezultata (0x20)</span>
+                out_port &lt;= result(<span class="num">9</span> <span class="kw">downto</span> <span class="num">2</span>);  <span class="com">-- dijeljenje s 4 = pomak za 2</span>
             <span class="kw">end if</span>;
         <span class="kw">end if</span>;
     <span class="kw">elsif</span> falling_edge(clk) <span class="kw">then</span>
-        <span class="kw">if</span> pun = <span class="str">"100"</span> <span class="kw">then</span> result &lt;= x0 + x1 + x2 + x3; <span class="com">// zbroj 4 uzorka</span>
+        <span class="kw">if</span> pun = <span class="str">"100"</span> <span class="kw">then</span> result &lt;= x0 + x1 + x2 + x3; <span class="com">-- zbroj 4 uzorka</span>
         <span class="kw">else</span> result &lt;= (<span class="kw">others</span>=&gt;<span class="str">'0'</span>); <span class="kw">end if</span>;
     <span class="kw">end if</span>;
   <span class="kw">end process</span>;
@@ -1383,15 +1395,17 @@ __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exi
     </div>
     <div class="toggle"><span class="arrow">▶</span> Prikaži rješenje</div>
     <div class="sol">
-      <pre><code><span class="com">// retarget.c</span>
+      <pre><code><span class="com">// retarget.c — svaki printf-ani znak = jedan ton (puls na GPIOE11)</span>
+<span class="kw">extern void</span> <span class="fn">Pause1</span>(<span class="kw">void</span>);
 __asm(<span class="str">".global __use_no_semihosting"</span>);
 <span class="kw">int</span> <span class="fn">fputc</span>(<span class="kw">int</span> c, FILE *f){ (<span class="kw">void</span>)f;
-    GPIOE-&gt;ODR |= c;          <span class="com">// pišti (jedan ton)</span>
+    GPIOE-&gt;ODR |= (<span class="num">1UL</span> &lt;&lt; <span class="num">11</span>);   <span class="com">// upali zvučnik (GPIOE11)</span>
+    <span class="fn">Pause1</span>();                    <span class="com">// trajanje tona</span>
+    GPIOE-&gt;ODR &amp;= ~(<span class="num">1UL</span> &lt;&lt; <span class="num">11</span>);  <span class="com">// ugasi zvučnik</span>
     <span class="kw">return</span> c;
 }
 <span class="kw">int</span> <span class="fn">fgetc</span>(FILE *f){ (<span class="kw">void</span>)f;
-    <span class="kw">volatile uint32_t</span> broj = GPIOD-&gt;IDR &amp; <span class="num">0x0000000F</span>; <span class="com">// GPIO 0-3</span>
-    <span class="kw">return</span> broj;
+    <span class="kw">return</span> GPIOD-&gt;IDR &amp; <span class="num">0x0000000F</span>;   <span class="com">// GPIO 0-3 (4-bitna vrijednost)</span>
 }
 <span class="kw">int</span> <span class="fn">ferror</span>(FILE *f){ (<span class="kw">void</span>)f; <span class="kw">return</span> <span class="num">0</span>; }
 __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exit</span>(<span class="kw">int</span> rc){ (<span class="kw">void</span>)rc; <span class="kw">while</span>(<span class="num">1</span>); }</code></pre>
@@ -1409,8 +1423,9 @@ __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exi
     }
 }</code></pre>
       <div class="expl">Broj tonova = pročitana vrijednost → jednostavna <code>for</code> petlja. Svaki <code>printf("1")</code>
-      preko <code>fputc</code> upali zvučnik, a <code>Pause1()</code> daje razmak. (U izvornom rješenju Pause je
-      izostavljen unutar petlje — uredno je dodati ga radi razdvajanja tonova.)</div>
+      pošalje jedan znak, pa se <code>fputc</code> pozove jednom i napravi <b>jedan puls na GPIOE11</b> (upali → Pause1 → ugasi).
+      <code>Pause1()</code> u main petlji daje razmak između tonova. <b>Pazi:</b> fputc mora pulsirati bit 11
+      (<code>1&lt;&lt;11</code>), a ne <code>ODR |= c</code> — jer bi znak '1' (0x31) postavio krive pinove i nikad ne ugasio zvučnik.</div>
     </div>
   </div>
 
@@ -1637,8 +1652,8 @@ __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exi
 
 <span class="kw">entity</span> counter <span class="kw">is</span> <span class="kw">port</span>(
     output:  <span class="kw">out</span> std_logic_vector(<span class="num">15</span> <span class="kw">downto</span> <span class="num">0</span>);
-    up_down: <span class="kw">in</span>  std_logic;                          <span class="com">// 1 = naprijed, 0 = natrag</span>
-    value:   <span class="kw">in</span>  std_logic_vector(<span class="num">3</span> <span class="kw">downto</span> <span class="num">0</span>);     <span class="com">// korak</span>
+    up_down: <span class="kw">in</span>  std_logic;                          <span class="com">-- 1 = naprijed, 0 = natrag</span>
+    value:   <span class="kw">in</span>  std_logic_vector(<span class="num">3</span> <span class="kw">downto</span> <span class="num">0</span>);     <span class="com">-- korak</span>
     enable:  <span class="kw">in</span>  std_logic;
     rst:     <span class="kw">in</span>  std_logic;
     clk:     <span class="kw">in</span>  std_logic);
@@ -1649,14 +1664,14 @@ __attribute__((noreturn)) <span class="kw">void</span> <span class="fn">_sys_exi
 <span class="kw">begin</span>
     <span class="kw">process</span>(clk, rst)
     <span class="kw">begin</span>
-        <span class="kw">if</span> rst = <span class="str">'1'</span> <span class="kw">then</span>                     <span class="com">// asinkroni reset</span>
+        <span class="kw">if</span> rst = <span class="str">'1'</span> <span class="kw">then</span>                     <span class="com">-- asinkroni reset</span>
             cnt &lt;= (<span class="kw">others</span> =&gt; <span class="str">'0'</span>);
         <span class="kw">elsif</span> rising_edge(clk) <span class="kw">then</span>
             <span class="kw">if</span> enable = <span class="str">'1'</span> <span class="kw">then</span>
                 <span class="kw">if</span> up_down = <span class="str">'1'</span> <span class="kw">then</span>
-                    cnt &lt;= cnt + (<span class="str">"000000000000"</span> &amp; value); <span class="com">// uvećaj za VALUE</span>
+                    cnt &lt;= cnt + (<span class="str">"000000000000"</span> &amp; value); <span class="com">-- uvećaj za VALUE</span>
                 <span class="kw">else</span>
-                    cnt &lt;= cnt - (<span class="str">"000000000000"</span> &amp; value); <span class="com">// smanji za VALUE</span>
+                    cnt &lt;= cnt - (<span class="str">"000000000000"</span> &amp; value); <span class="com">-- smanji za VALUE</span>
                 <span class="kw">end if</span>;
             <span class="kw">end if</span>;
         <span class="kw">end if</span>;
@@ -1763,17 +1778,17 @@ PARAN:   OUTPUT s3, VJ3         <span class="com">; pošalji rezultat na VJ3</sp
     <div class="sol">
       <pre><code>        ADDRESS  <span class="num">000</span>
         CONSTANT PORT_ID1, <span class="num">80</span>   <span class="com">; ulazna</span>
-        CONSTANT PORT_ID2, <span class="num">60</span>   <span class="com">; parni</span>
-        CONSTANT PORT_ID3, <span class="num">40</span>   <span class="com">; neparni</span>
+        CONSTANT PORT_ID2, <span class="num">40</span>   <span class="com">; izlaz za PARNE (0x40)</span>
+        CONSTANT PORT_ID3, <span class="num">60</span>   <span class="com">; izlaz za NEPARNE (0x60)</span>
 
         ENABLE INTERRUPT
 CEKAJ:  JUMP CEKAJ
 PREKID: INPUT  s0, PORT_ID1   <span class="com">; pročitaj podatak</span>
         TEST   s0, FF         <span class="com">; AND sa svim 1 -> C = paritet (1 ako neparan br. jedinica)</span>
-        JUMP   C, NEPARAN
-PARAN:  OUTPUT s0, PORT_ID2   <span class="com">; paran -> 0x60</span>
+        JUMP   C, NEPARAN     <span class="com">; C=1 (neparan) -> NEPARAN</span>
+PARAN:  OUTPUT s0, PORT_ID2   <span class="com">; paran -> 0x40</span>
         RETURNI
-NEPARAN: OUTPUT s0, PORT_ID3  <span class="com">; neparan -> 0x40</span>
+NEPARAN: OUTPUT s0, PORT_ID3  <span class="com">; neparan -> 0x60</span>
         RETURNI
         ; prekidna adresa
         ADDRESS <span class="num">3FF</span>
@@ -1781,8 +1796,9 @@ NEPARAN: OUTPUT s0, PORT_ID3  <span class="com">; neparan -> 0x40</span>
       <div class="expl"><b>TEST instrukcija</b> radi AND nad operandima i postavlja zastavice <i>bez spremanja rezultata</i>.
       Zastavica <b>C</b> kod TEST-a daje <b>paritet</b>: C=1 ako je broj jedinica neparan. Tako jednom instrukcijom
       ispitamo paritet cijelog bajta.</div>
-      <div class="note">VHDL: ulazni proces mapira <code>port_id="10000000"</code> (0x80) → in_port, izlazni proces
-      dekodira 0x60 i 0x40 uz <code>write_strobe</code>. Prekidni sustav: poseban proces drži <code>interrupt</code>
+      <div class="note">Paran broj jedinica → C=0 → padne na PARAN → 0x40; neparan → C=1 → NEPARAN → 0x60
+      (točno kako zadatak traži). VHDL: ulazni proces mapira <code>port_id="10000000"</code> (0x80) → in_port,
+      izlazni dekodira 0x40 i 0x60 uz <code>write_strobe</code>; prekidni proces drži <code>interrupt</code>
       dok ga <code>interrupt_ack</code> ne potvrdi.</div>
     </div>
   </div>
@@ -1979,18 +1995,21 @@ DEBOUNCE: INPUT  s0, TIPKALO   <span class="com">; pročitaj stanje tipkala</spa
     NVIC_SetPriority(TIM7_IRQn, <span class="num">2</span>);
     NVIC_EnableIRQ(TIM7_IRQn);
 }
+<span class="kw">volatile uint8_t</span> cnt = <span class="num">0</span>;
 <span class="kw">void</span> <span class="fn">TIM7_IRQHandler</span>(<span class="kw">void</span>){
     <span class="kw">if</span>(TIM7-&gt;SR &amp; TIM_SR_UIF){
         TIM7-&gt;SR &amp;= ~TIM_SR_UIF;                <span class="com">// obriši zastavicu prekida</span>
-        GPIOB-&gt;ODR ^= (<span class="num">1UL</span> &lt;&lt; <span class="num">14</span>);            <span class="com">// toggle PB14</span>
+        <span class="kw">if</span>(++cnt == <span class="num">5</span>){                       <span class="com">// 5 × 100 ms = 500 ms</span>
+            GPIOB-&gt;ODR ^= (<span class="num">1UL</span> &lt;&lt; <span class="num">14</span>);        <span class="com">// toggle -> period 1 s = 1 Hz</span>
+            cnt = <span class="num">0</span>;
+        }
     }
 }
 <span class="kw">int</span> <span class="fn">main</span>(<span class="kw">void</span>){ <span class="fn">init_Peripherals</span>(); <span class="kw">while</span>(<span class="num">1</span>); }</code></pre>
-      <div class="expl"><b>Frekvencija izlaza:</b> prekid je svakih 100 ms → na svaki prekid <i>preklopimo (toggle)</i>
-      PB14. Puni period signala = 2 × 100 ms = 200 ms → <b>f = 1/0.2 s = 5 Hz</b>… pažnja: za točno <b>1 Hz</b>
-      period mora biti 1 s, pa toggle mora biti svakih 500 ms. Ako TIM7 fiksno daje prekid svakih 100 ms,
-      u handleru se broji 5 prekida prije toggla. <b>Iz zadatka:</b> ako je dozvoljeno mijenjati ARR, postavi
-      period prekida na 500 ms; inače dodaj softverski brojač.</div>
+      <div class="expl"><b>Računica:</b> pravokutni signal 1 Hz ima period 1 s, a <b>toggle</b> mijenja stanje na pola
+      perioda → svakih <b>500 ms</b>. Prekid dolazi svakih 100 ms (zadano), pa moramo izbrojati <b>5 prekida</b>
+      (5 × 100 ms = 500 ms) prije svakog preklapanja PB14. Bez brojača bi toggle na svaki prekid dao 5 Hz
+      (period 200 ms) — pogrešno.</div>
       <div class="note"><b>Ključ timer-prekida:</b> <code>PSC</code> (prescaler) i <code>ARR</code> (auto-reload)
       određuju period, <code>DIER.UIE</code> omogućuje prekid, <code>CR1.CEN</code> pokreće brojilo, a u handleru
       se OBAVEZNO briše <code>SR.UIF</code>.</div>
