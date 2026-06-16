@@ -2318,6 +2318,7 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
   const quizOv = document.getElementById('quizOv');
   const quizCard = document.getElementById('quizCard');
   let deck = [], qi = 0, qCorrect = 0, qScope = 'all', qWrong = [];
+  let qStarted = false, qRevealed = false;   // za nastavak gdje si stao
 
   function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
   function quizPool(scope){
@@ -2326,7 +2327,17 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
     if(scope==='tab'){ const p=document.querySelector('.panel.active'); t = p ? [...p.querySelectorAll('.task')] : t; }
     return t;
   }
-  function openQuiz(){ renderStart(); quizOv.classList.add('show'); document.body.style.overflow='hidden'; }
+  function openQuiz(){
+    if(qStarted && qi < deck.length){          // nastavi gdje si stao
+      const wasRevealed = qRevealed;
+      renderCard();
+      if(wasRevealed){ const rb = quizCard.querySelector('#qReveal'); if(rb) rb.click(); }
+    } else {
+      renderStart();
+    }
+    quizOv.classList.add('show'); document.body.style.overflow='hidden';
+  }
+  // zatvaranje NE briše napredak — samo sakrije kviz (nastavi se kasnije)
   function closeQuiz(){ quizOv.classList.remove('show'); document.body.style.overflow=''; }
 
   function renderStart(){
@@ -2359,11 +2370,13 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
     deck = shuffle(quizPool(scope).slice());
     qi = 0; qCorrect = 0; qWrong = [];
     if(deck.length===0){ renderStart(); return; }
+    qStarted = true;
     renderCard();
   }
 
   function renderCard(){
     if(qi >= deck.length) return renderEnd();
+    qRevealed = false;
     const t = deck[qi];
     const src = (labels[t.closest('.panel').id]||'').replace(/\s*\(.*$/,'');
     const pct = Math.round(100*qi/deck.length);
@@ -2386,6 +2399,7 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
                      '<button class="qbtn ghost" id="qSkip">Preskoči ⏭</button>';
     quizCard.querySelector('#qSkip').onclick = ()=>{ qi++; renderCard(); };
     quizCard.querySelector('#qReveal').onclick = ()=>{
+      qRevealed = true;
       quizCard.querySelector('#qSol').classList.add('show');
       acts.innerHTML = '<button class="qbtn good" id="qGood">✓ Znao sam</button>'+
                        '<button class="qbtn again" id="qBad">↻ Ponovi</button>';
@@ -2404,6 +2418,7 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
   }
 
   function renderEnd(){
+    qStarted = false;   // sesija gotova -> idući put start ekran
     const total = deck.length, pct = total ? Math.round(100*qCorrect/total) : 0;
     const emoji = pct>=80?'🏆':pct>=50?'👍':'📚';
     quizCard.innerHTML =
@@ -2425,8 +2440,8 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
     quizCard.querySelector('#qDone').onclick = closeQuiz;
   }
 
-  // zatvaranje: Escape ili klik na pozadinu
-  quizOv.addEventListener('click', e=>{ if(e.target===quizOv) closeQuiz(); });
+  // klik IZVAN okvira NE gasi kviz (namjerno). Zatvaranje samo X ili Escape,
+  // a oba čuvaju napredak pa "🧠 Kviz" nastavlja gdje si stao.
   document.addEventListener('keydown', e=>{ if(e.key==='Escape' && quizOv.classList.contains('show')) closeQuiz(); });
 </script>
 </body>
