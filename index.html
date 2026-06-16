@@ -150,6 +150,42 @@
   .cheatgrid code{color:#ffd479;font-family:"JetBrains Mono",monospace;font-size:.84rem}
   .cheatgrid ul{margin:4px 0 0;padding-left:18px;font-size:.86rem}
   .cheatgrid li{margin:3px 0}
+
+  /* --- kviz mod --- */
+  .quiz-ov{position:fixed;inset:0;z-index:100;display:none;padding:20px;overflow-y:auto;
+    background:rgba(8,12,20,.93);backdrop-filter:blur(5px)}
+  .quiz-ov.show{display:block}
+  .quiz-card{background:var(--card);border:1px solid var(--line);border-radius:16px;
+    max-width:840px;width:100%;margin:20px auto;box-shadow:0 12px 44px rgba(0,0,0,.55);overflow:hidden}
+  .quiz-head{display:flex;align-items:center;gap:14px;padding:13px 18px;border-bottom:1px solid var(--line);
+    background:var(--card2)}
+  .quiz-head .prog{font-weight:800;color:var(--acc)}
+  .quiz-head .score{color:var(--acc2);font-size:.85rem;font-weight:700}
+  .quiz-head .x{margin-left:auto;cursor:pointer;color:var(--mut);font-size:1.5rem;line-height:1;
+    background:none;border:0;padding:0 4px}
+  .quiz-head .x:hover{color:var(--txt)}
+  .qbar{height:5px;background:var(--card2)}
+  .qbar>span{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .3s}
+  .quiz-body{padding:18px}
+  .quiz-src{font-size:.72rem;color:var(--mut);margin-bottom:10px;text-transform:uppercase;letter-spacing:1px}
+  .quiz-sol{display:none;margin-top:8px}
+  .quiz-sol.show{display:block}
+  .quiz-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .qbtn{flex:1 1 auto;padding:12px 16px;border-radius:10px;border:1px solid var(--line);
+    background:var(--card2);color:var(--txt);font-weight:700;cursor:pointer;font-size:.92rem}
+  .qbtn:hover{filter:brightness(1.12)}
+  .qbtn.primary{background:var(--acc);color:#06101f;border-color:var(--acc)}
+  .qbtn.good{background:var(--acc2);color:#06101f;border-color:var(--acc2)}
+  .qbtn.again{background:var(--warn);color:#06101f;border-color:var(--warn)}
+  .qbtn.ghost{background:transparent;color:var(--mut);flex:0 0 auto}
+  .quiz-center{text-align:center;padding:30px 24px}
+  .quiz-center h2{margin:0 0 6px;font-size:1.4rem}
+  .quiz-center p{color:var(--mut);margin:0 0 6px}
+  .quiz-scope{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:18px 0}
+  .quiz-scope button{padding:10px 15px;border-radius:9px;border:1px solid var(--line);
+    background:var(--card2);color:var(--txt);cursor:pointer;font-weight:700}
+  .quiz-scope button.sel{background:var(--acc);color:#06101f;border-color:var(--acc)}
+  .quiz-big{font-size:2.6rem;font-weight:800;margin:6px 0}
 </style>
 </head>
 <body>
@@ -176,6 +212,7 @@
     <button class="btn allbtn" onclick="allSol(true)">▼ Otvori rješenja</button>
     <button class="btn allbtn" onclick="allSol(false)">▲ Zatvori rješenja</button>
     <button class="btn" onclick="randomQ()">🎲 Nasumično pitanje</button>
+    <button class="btn" onclick="openQuiz()">🧠 Kviz</button>
     <button class="btn" id="freqBtn" onclick="toggleFreq()">🔥 Samo česta</button>
     <div class="progwrap" title="Označeno kao naučeno">
       <span id="progtxt">0/0</span>
@@ -2081,6 +2118,8 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
 
 </div><!-- /wrap -->
 
+<div class="quiz-ov" id="quizOv"><div class="quiz-card" id="quizCard"></div></div>
+
 <a class="up" href="#" onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">↑</a>
 
 <footer>
@@ -2255,6 +2294,121 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
       }
     }
   }
+
+  // --- KVIZ MOD (flashcard) ---
+  const quizOv = document.getElementById('quizOv');
+  const quizCard = document.getElementById('quizCard');
+  let deck = [], qi = 0, qCorrect = 0, qScope = 'all', qWrong = [];
+
+  function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+  function quizPool(scope){
+    let t = [...document.querySelectorAll('.task')];
+    if(scope==='freq') t = t.filter(x=>x.classList.contains('isfreq'));
+    if(scope==='tab'){ const p=document.querySelector('.panel.active'); t = p ? [...p.querySelectorAll('.task')] : t; }
+    return t;
+  }
+  function openQuiz(){ renderStart(); quizOv.classList.add('show'); document.body.style.overflow='hidden'; }
+  function closeQuiz(){ quizOv.classList.remove('show'); document.body.style.overflow=''; }
+
+  function renderStart(){
+    const tabLabel = (labels[(document.querySelector('.panel.active')||{}).id]||'ovaj tab').replace(/\s*\(.*$/,'');
+    quizCard.innerHTML =
+      '<div class="quiz-center">'+
+        '<h2>🧠 Kviz — samotestiranje</h2>'+
+        '<p>Sjeti se odgovora, pa otkrij rješenje i oceni se. "Znao sam" označi pitanje kao naučeno.</p>'+
+        '<div class="quiz-scope">'+
+          '<button data-s="all" class="sel">Sva pitanja</button>'+
+          '<button data-s="freq">🔥 Samo česta</button>'+
+          '<button data-s="tab">Trenutni: '+tabLabel+'</button>'+
+        '</div>'+
+        '<div class="quiz-actions" style="justify-content:center">'+
+          '<button class="qbtn primary" id="qStart" style="flex:0 0 auto">▶ Počni kviz</button>'+
+          '<button class="qbtn ghost" id="qClose">Zatvori</button>'+
+        '</div>'+
+      '</div>';
+    let chosen = 'all';
+    quizCard.querySelectorAll('.quiz-scope button').forEach(b=>b.onclick=()=>{
+      quizCard.querySelectorAll('.quiz-scope button').forEach(x=>x.classList.remove('sel'));
+      b.classList.add('sel'); chosen = b.dataset.s;
+    });
+    quizCard.querySelector('#qStart').onclick = ()=>startQuiz(chosen);
+    quizCard.querySelector('#qClose').onclick = closeQuiz;
+  }
+
+  function startQuiz(scope){
+    qScope = scope;
+    deck = shuffle(quizPool(scope).slice());
+    qi = 0; qCorrect = 0; qWrong = [];
+    if(deck.length===0){ renderStart(); return; }
+    renderCard();
+  }
+
+  function renderCard(){
+    if(qi >= deck.length) return renderEnd();
+    const t = deck[qi];
+    const src = (labels[t.closest('.panel').id]||'').replace(/\s*\(.*$/,'');
+    const pct = Math.round(100*qi/deck.length);
+    quizCard.innerHTML =
+      '<div class="quiz-head"><span class="prog">Pitanje '+(qi+1)+'/'+deck.length+'</span>'+
+        '<span class="score">✓ '+qCorrect+'</span>'+
+        '<button class="x" id="qX">&times;</button></div>'+
+      '<div class="qbar"><span style="width:'+pct+'%"></span></div>'+
+      '<div class="quiz-body"><div class="quiz-src">'+src+'</div>'+
+        '<div id="qHost"></div><div class="quiz-sol" id="qSol"></div>'+
+        '<div class="quiz-actions" id="qActs"></div></div>';
+    quizCard.querySelector('#qX').onclick = closeQuiz;
+    quizCard.querySelector('#qHost').appendChild(t.querySelector('.q').cloneNode(true));
+    const solClone = t.querySelector('.sol').cloneNode(true);
+    solClone.classList.add('open');
+    quizCard.querySelector('#qSol').appendChild(solClone);
+
+    const acts = quizCard.querySelector('#qActs');
+    acts.innerHTML = '<button class="qbtn primary" id="qReveal">👁 Prikaži rješenje</button>'+
+                     '<button class="qbtn ghost" id="qSkip">Preskoči ⏭</button>';
+    quizCard.querySelector('#qSkip').onclick = ()=>{ qi++; renderCard(); };
+    quizCard.querySelector('#qReveal').onclick = ()=>{
+      quizCard.querySelector('#qSol').classList.add('show');
+      acts.innerHTML = '<button class="qbtn good" id="qGood">✓ Znao sam</button>'+
+                       '<button class="qbtn again" id="qBad">↻ Ponovi</button>';
+      quizCard.querySelector('#qGood').onclick = ()=>answer(true);
+      quizCard.querySelector('#qBad').onclick  = ()=>answer(false);
+    };
+  }
+
+  function answer(ok){
+    const t = deck[qi];
+    if(ok){
+      qCorrect++;
+      if(!done.has(t.dataset.id)){ done.add(t.dataset.id); localStorage.setItem(PKEY, JSON.stringify([...done])); applyDone(); }
+    } else { qWrong.push(t); }
+    qi++; renderCard();
+  }
+
+  function renderEnd(){
+    const total = deck.length, pct = total ? Math.round(100*qCorrect/total) : 0;
+    const emoji = pct>=80?'🏆':pct>=50?'👍':'📚';
+    quizCard.innerHTML =
+      '<div class="quiz-center">'+
+        '<div style="font-size:2.6rem">'+emoji+'</div>'+
+        '<h2>Gotovo!</h2>'+
+        '<div class="quiz-big" style="color:var(--acc2)">'+qCorrect+' / '+total+'</div>'+
+        '<p>'+pct+'% točno'+(qWrong.length?(' · '+qWrong.length+' za ponoviti'):'')+'</p>'+
+        '<div class="quiz-actions" style="justify-content:center">'+
+          (qWrong.length?'<button class="qbtn again" id="qRetry" style="flex:0 0 auto">↻ Ponovi netočne ('+qWrong.length+')</button>':'')+
+          '<button class="qbtn primary" id="qNew" style="flex:0 0 auto">🔄 Novi kviz</button>'+
+          '<button class="qbtn ghost" id="qDone">Zatvori</button>'+
+        '</div>'+
+      '</div>';
+    if(qWrong.length) quizCard.querySelector('#qRetry').onclick = ()=>{
+      deck = shuffle(qWrong.slice()); qi=0; qCorrect=0; qWrong=[]; renderCard();
+    };
+    quizCard.querySelector('#qNew').onclick = renderStart;
+    quizCard.querySelector('#qDone').onclick = closeQuiz;
+  }
+
+  // zatvaranje: Escape ili klik na pozadinu
+  quizOv.addEventListener('click', e=>{ if(e.target===quizOv) closeQuiz(); });
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape' && quizOv.classList.contains('show')) closeQuiz(); });
 </script>
 </body>
 </html>
