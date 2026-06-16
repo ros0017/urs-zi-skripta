@@ -130,6 +130,26 @@
     background:var(--card);border:1px dashed var(--line);border-radius:12px;margin-bottom:18px}
   body.searching .noresults.show{display:block}
   mark{background:var(--warn);color:#06101f;border-radius:3px;padding:0 2px}
+
+  /* --- oznaka "čest" + freq filter --- */
+  .freq{display:inline-block;font-size:.66rem;font-weight:800;color:#2a1500;
+    background:linear-gradient(90deg,#ffb454,#ff7a59);padding:1px 8px;border-radius:20px;
+    margin-right:7px;vertical-align:middle;letter-spacing:.3px}
+  .btn.on{background:var(--warn);color:#06101f;border-color:var(--warn)}
+
+  /* --- šalabahter --- */
+  .cheatcard{background:var(--card);border:1px solid var(--warn);border-radius:14px;
+    padding:16px 18px;margin-bottom:20px;box-shadow:0 4px 18px rgba(0,0,0,.25)}
+  body.searching .cheatcard{display:none}
+  .cheatcard>h3{margin:0 0 4px;font-size:1.05rem;color:var(--warn)}
+  .cheatcard>p.s{margin:0 0 12px;color:var(--mut);font-size:.86rem}
+  .cheatgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:680px){.cheatgrid{grid-template-columns:1fr}}
+  .cheatgrid .box{background:var(--card2);border:1px solid var(--line);border-radius:9px;padding:11px 14px}
+  .cheatgrid h5{margin:0 0 6px;color:var(--acc);font-size:.84rem}
+  .cheatgrid code{color:#ffd479;font-family:"JetBrains Mono",monospace;font-size:.84rem}
+  .cheatgrid ul{margin:4px 0 0;padding-left:18px;font-size:.86rem}
+  .cheatgrid li{margin:3px 0}
 </style>
 </head>
 <body>
@@ -156,6 +176,7 @@
     <button class="btn allbtn" onclick="allSol(true)">▼ Otvori rješenja</button>
     <button class="btn allbtn" onclick="allSol(false)">▲ Zatvori rješenja</button>
     <button class="btn" onclick="randomQ()">🎲 Nasumično pitanje</button>
+    <button class="btn" id="freqBtn" onclick="toggleFreq()">🔥 Samo česta</button>
     <div class="progwrap" title="Označeno kao naučeno">
       <span id="progtxt">0/0</span>
       <div class="progbar"><span id="progfill"></span></div>
@@ -169,6 +190,69 @@
   <div class="intro">
     <b>Sažeta teorija</b> — koncepti koji se <i>ponavljaju iz godine u godinu</i>. Nauči ovo i pokriješ
     sve teorijske zadatke (2 boda komadi) na ispitu. Detaljni primjeri koda su uz pojedine ispite.
+  </div>
+
+  <!-- ŠALABAHTER -->
+  <div class="cheatcard">
+    <h3>📋 Šalabahter — ono što se najviše pita</h3>
+    <p class="s">Brzi podsjetnik na formule, registre i korake koji se ponavljaju iz godine u godinu.</p>
+    <div class="cheatgrid">
+      <div class="box">
+        <h5>📐 Formule</h5>
+        <ul class="clean">
+          <li>PROM = <code>2^k · n</code> bitova (k ulaza, n izlaza)</li>
+          <li>SysTick: <code>LOAD = f · T − 1</code>, gdje je <code>f = AHB/8</code></li>
+          <li>npr. 42 MHz/8 = 5.25 MHz → 1 ms → 5250 → <code>LOAD=5249=0x1481</code></li>
+          <li>168 MHz/8 = 21 MHz → 1 ms → 21000 → <code>LOAD=20999=0x5207</code></li>
+        </ul>
+      </div>
+      <div class="box">
+        <h5>🔌 GPIO registri (2 bita/pin osim OTYPER)</h5>
+        <ul class="clean">
+          <li><code>MODER</code>: 00 ulaz · 01 izlaz · 10 alt · 11 analog</li>
+          <li><code>OTYPER</code>: 0 push-pull · 1 open-drain</li>
+          <li><code>OSPEEDR</code>: brzina (11 = najbrže)</li>
+          <li><code>PUPDR</code>: 01 pull-up · 10 pull-down</li>
+          <li><b>Uvijek:</b> takt (RCC→AHB1ENR) + dummy read, pa <code>&amp;=</code> očisti, <code>|=</code> postavi</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h5>⚡ EXTI vanjski prekid — koraci</h5>
+        <ul class="clean">
+          <li>1. Takt za GPIO + <code>SYSCFG</code></li>
+          <li>2. <code>SYSCFG→EXTICR</code> = odabir porta za liniju</li>
+          <li>3. <code>RTSR</code> (rastući) / <code>FTSR</code> (padajući brid)</li>
+          <li>4. <code>IMR</code> = otključaj (unmask) liniju</li>
+          <li>5. <code>NVIC_SetPriority</code> + <code>NVIC_EnableIRQ</code></li>
+          <li>6. <b>U handleru:</b> obriši <code>EXTI→PR</code> upisom <b>1</b>!</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h5>💾 Flash WS — redoslijed</h5>
+        <ul class="clean">
+          <li>WS u <code>FLASH_ACR.LATENCY</code> (najniža 3 bita)</li>
+          <li><b>↑ frekvencija:</b> prvo povećaj WS, čekaj, pa f</li>
+          <li><b>↓ frekvencija:</b> prvo smanji f, pa smanji WS</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h5>🧩 PicoBlaze trikovi</h5>
+        <ul class="clean">
+          <li>Paritet: <code>TEST sX, FF</code> → C=1 ako neparan br. jedinica</li>
+          <li>Parnost vrijednosti: <code>AND sX, 01</code> + <code>JUMP Z</code></li>
+          <li>|x| iz 2'k: <code>SUB sX,01</code> + <code>XOR sX,FF</code></li>
+          <li>256 ulaznih + 256 izlaznih VJ · zastavice samo <b>Z</b> i <b>C</b></li>
+        </ul>
+      </div>
+      <div class="box">
+        <h5>🔧 VHDL podsjetnik</h5>
+        <ul class="clean">
+          <li><b>Async reset:</b> <code>reset</code> u sensitivity listi, provjera <i>prije</i> <code>rising_edge(clk)</code></li>
+          <li>MUX: "odabirna" = <code>with…select</code>, "uvjetna" = <code>when…else</code></li>
+          <li>VJ sučelje: <code>port_id, in_port, out_port, read_strobe, write_strobe</code></li>
+        </ul>
+      </div>
+    </div>
   </div>
 
   <!-- PROM -->
@@ -2009,6 +2093,16 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
   const panels = [...document.querySelectorAll('.panel')];
   const labels = {}; tabs.forEach(t=>labels[t.dataset.p]=t.textContent.trim());
 
+  // pitanja koja se ponavljaju 3+ puta kroz ispite -> oznaka "🔥 čest"
+  const FREQ = new Set([
+    't/T1','t/T2','t/T5','t/T6','t/T7','t/T8','t/T9','t/T10','t/T14',
+    'z2024/Z2','z2024/Z9','z2024/Z10',
+    'z2023/Z8','z2023/Z11','z2023/Z12',
+    'z2022/Z1','z2022/Z3','z2022/Z12','z2022/JIR-10',
+    'z2021/Z1','z2021/Z2','z2021/Z3','z2021/Z7','z2021/Z8',
+    'z2020/D-PAR'
+  ]);
+
   // --- inicijalizacija kartica: stabilan id, naslov sekcije, "naučeno" gumb ---
   let TOTAL = 0;
   panels.forEach(p=>{
@@ -2021,6 +2115,14 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
       const badge = task.querySelector('.badge');
       const id = p.id + '/' + (badge ? badge.textContent.trim() : Math.random());
       task.dataset.id = id;
+      if(FREQ.has(id)){
+        task.classList.add('isfreq');
+        const q = task.querySelector('.q');
+        const chip = document.createElement('span');
+        chip.className = 'freq'; chip.textContent = '🔥 čest';
+        if(badge && badge.nextSibling) q.insertBefore(chip, badge.nextSibling);
+        else if(q) q.insertBefore(chip, q.firstChild);
+      }
       const tg = task.querySelector('.toggle');
       if(tg){
         const chk = document.createElement('button');
@@ -2062,7 +2164,7 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
 
   // --- tabovi ---
   function showTab(id){
-    const inp = document.getElementById('q'); if(inp.value){ inp.value=''; doSearch(); }
+    resetFilters();
     tabs.forEach(x=>x.classList.toggle('active', x.dataset.p===id));
     panels.forEach(x=>x.classList.toggle('active', x.id===id));
   }
@@ -2080,33 +2182,46 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
     });
   }
 
-  // --- pretraga (globalno, kroz sve sekcije) ---
+  // --- pretraga + filter "samo česta" (globalno, kroz sve sekcije) ---
   const qInput = document.getElementById('q');
-  function doSearch(){
+  let freqOnly = false;
+  function resetFilters(){
+    freqOnly = false; document.getElementById('freqBtn').classList.remove('on');
+    if(qInput.value) qInput.value='';
+    applyFilter();
+  }
+  function applyFilter(){
     const q = qInput.value.trim().toLowerCase();
-    const allTasks = document.querySelectorAll('.task');
-    if(!q){
-      document.body.classList.remove('searching');
-      allTasks.forEach(t=>t.classList.remove('nomatch'));
+    const active = !!q || freqOnly;
+    document.body.classList.toggle('searching', active);
+    if(!active){
+      document.querySelectorAll('.task').forEach(t=>t.classList.remove('nomatch'));
       panels.forEach(p=>p.classList.remove('nohits'));
       document.getElementById('noresults').classList.remove('show');
       return;
     }
-    document.body.classList.add('searching');
     let hits = 0;
     panels.forEach(p=>{
       let vis = 0;
       p.querySelectorAll('.task').forEach(t=>{
-        const m = t.textContent.toLowerCase().includes(q);
-        t.classList.toggle('nomatch', !m);
-        if(m){ vis++; hits++; }
+        const okQ = !q || t.textContent.toLowerCase().includes(q);
+        const okF = !freqOnly || t.classList.contains('isfreq');
+        const ok = okQ && okF;
+        t.classList.toggle('nomatch', !ok);
+        if(ok){ vis++; hits++; }
       });
       p.classList.toggle('nohits', vis===0);
     });
     document.getElementById('noresults').classList.toggle('show', hits===0);
   }
-  qInput.addEventListener('input', doSearch);
-  qInput.addEventListener('keydown', e=>{ if(e.key==='Escape'){ qInput.value=''; doSearch(); } });
+  function toggleFreq(){
+    freqOnly = !freqOnly;
+    document.getElementById('freqBtn').classList.toggle('on', freqOnly);
+    applyFilter();
+    if(freqOnly) window.scrollTo({top:0,behavior:'smooth'});
+  }
+  qInput.addEventListener('input', applyFilter);
+  qInput.addEventListener('keydown', e=>{ if(e.key==='Escape'){ resetFilters(); } });
 
   // --- nasumično pitanje (samotestiranje) ---
   function flash(task){
@@ -2116,7 +2231,7 @@ START: INPUT  s0, <span class="num">0x01</span>     <span class="com">; čita sv
     setTimeout(()=>task.style.boxShadow='',1500);
   }
   function randomQ(){
-    if(qInput.value){ qInput.value=''; doSearch(); }
+    resetFilters();
     const all = [...document.querySelectorAll('.task')];
     const task = all[Math.floor(Math.random()*all.length)];
     const pid = task.closest('.panel').id;
